@@ -1,15 +1,17 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { HostOpsApi, HostPropertyStore, UtilityBillUpdate } from '@services';
-import { HostRoom, Tenant, UtilityBill, UtilityType } from '@hostelhive/data-access';
+import { ApiError, HostRoom, Tenant, UtilityBill, UtilityType } from '@hostelhive/data-access';
 import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, roomsReply, sessionUser } from '@app/testing/host-builders';
 import { hostPageDeps, hostPageProviders } from '@app/testing/host-page';
-import { seedHostPropertyStore } from '@app/testing/host-stubs';
+import { NotificationSpy, seedHostPropertyStore } from '@app/testing/host-stubs';
 import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import type { Role } from '@core/auth/roles';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
+import { PAGE_SIZE } from '@util/pagination';
 import { SessionStore } from '@core/auth/session-store';
 import { AddBill } from './add-bill';
 
@@ -75,9 +77,37 @@ interface Form {
   rateInput: { set(v: string): void };
   setDays(tenantId: string, value: string): void;
   addToBatch(): void;
+  submitError: { (): string | null; set(v: string | null): void };
+  type: { set(v: UtilityType): void };
+  roomId: { set(v: string): void };
+  totalInput: { set(v: string): void };
 }
 
-function open(opts: { saved?: UtilityBill; tenants?: Tenant[] } = {}) {
+/** The options a quiet request carries, so the interceptor raises no toast of its own. */
+const QUIET = { suppressErrorToast: true };
+
+interface OpenOptions {
+  saved?: UtilityBill;
+  tenants?: Tenant[];
+  /** The bill being edited; `null` opens the add form. */
+  billId?: string | null;
+  /** Signs in as this role; left signed out otherwise. */
+  role?: Role;
+  create?: () => Observable<unknown>;
+  update?: () => Observable<unknown>;
+}
+
+/** Fills the add form with a water bill for the room and saves it. */
+function saveNew(form: Form): void {
+  form.type.set('water');
+  form.roomId.set(ROOM.id);
+  form.totalInput.set('500');
+  form.addToBatch();
+}
+
+function open(opts: OpenOptions = {}) {
+  const notifications = new NotificationSpy();
+  const options = { create: [] as unknown[], update: [] as unknown[] };
   const updates: { hostelId: string; billId: string; body: UtilityBillUpdate }[] = [];
   const creates: unknown[] = [];
   const api = {
@@ -87,28 +117,33 @@ function open(opts: { saved?: UtilityBill; tenants?: Tenant[] } = {}) {
     utilityBillFormOptions: () => of([]),
     utilityMeta: (type: UtilityType) => ({ type, label: type, icon: '', metered: true, unit: 'kWh', split: 'prorata' }),
     getUtilityBill: () => of(opts.saved ?? bill()),
-    updateUtilityBill: (hostelId: string, billId: string, body: UtilityBillUpdate) => {
+    updateUtilityBill: (hostelId: string, billId: string, body: UtilityBillUpdate, request?: unknown) => {
       updates.push({ hostelId, billId, body });
-      return of(null);
+      options.update.push(request);
+      return opts.update?.() ?? of(null);
     },
-    createUtilityBill: (_hostelId: string, body: unknown) => {
+    createUtilityBill: (_hostelId: string, body: unknown, request?: unknown) => {
       creates.push(body);
-      return of(null);
+      options.create.push(request);
+      return opts.create?.() ?? of(null);
     },
   };
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
+      provideI18nTesting(),
+      notifications.provider(),
       { provide: HostOpsApi, useValue: api },
       { provide: HostPropertyStore, useValue: { selected: signal('DZNqAc'), timeZoneOf: () => of(null) } },
-      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ billId: 'aVXGyz' }) } } },
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(opts.billId === null ? {} : { billId: opts.billId ?? 'aVXGyz' }) } } },
     ],
   });
   TestBed.overrideComponent(AddBill, { set: { template: '', imports: [] } });
+  if (opts.role) TestBed.inject(SessionStore).setSession(sessionUser(opts.role), 'tok');
   const fixture = TestBed.createComponent(AddBill);
   fixture.detectChanges();
-  return { form: fixture.componentInstance as unknown as Form, updates, creates };
+  return { form: fixture.componentInstance as unknown as Form, updates, creates, notifications, options };
 }
 
 /**
@@ -258,7 +293,7 @@ async function openRefused(refusals: Partial<Record<Load, RefusalKind>>, role: R
   }
   fixture.detectChanges();
   const el = fixture.nativeElement as HTMLElement;
-  return { el, shown: loadSurface(el) };
+  return { el, deps, shown: loadSurface(el) };
 }
 
 describe('AddBill — a refused load in add mode', () => {
@@ -330,5 +365,193 @@ describe('AddBill — a refused load in add mode', () => {
       expect(shown.retry).toBe(true);
       expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
     });
+  });
+});
+
+const BILL_URL = `${HOSTEL_API}/utility_bills/aVXGyz`;
+
+const TOAST_BY_ROLE = [
+  { role: 'host', key: 'hostBookings.notAllowedOwner' },
+  { role: 'manager', key: 'hostBookings.notAllowed' },
+] as const satisfies readonly { role: Role; key: string }[];
+
+/** Mounts the real page on the edit route, signed in as `role`; the bill's own read answers with `error`. */
+async function openEditRefused(error: ApiError, role: Role = 'host') {
+  const deps = hostPageDeps();
+  Object.assign(deps.ops, {
+    rooms: vi.fn(() => of(roomsReply())),
+    renters: vi.fn(() => of({ renters: [], total: 0 })),
+    utilityBillFormOptions: vi.fn(() => of([])),
+    utilityMeta: (type: UtilityType) => ({ type, label: type, icon: '', metered: true, unit: 'kWh', split: 'prorata' }),
+    getUtilityBill: vi.fn(() => throwError(() => error)),
+  });
+  TestBed.configureTestingModule({
+    providers: [
+      ...hostPageProviders({}, deps),
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ billId: 'aVXGyz' }) } } },
+    ],
+  });
+  TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+  seedHostPropertyStore('month');
+  const fixture = TestBed.createComponent(AddBill);
+  for (let round = 0; round < 2; round++) {
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+  fixture.detectChanges();
+  const el = fixture.nativeElement as HTMLElement;
+  return { el, deps, shown: loadSurface(el) };
+}
+
+describe('AddBill — a refused read of the bill being edited', () => {
+  afterEach(() => {
+    TestBed.inject(HostPropertyStore).clear();
+    TestBed.inject(SessionStore).clear();
+  });
+
+  const refusedBill = (kind: RefusalKind, role?: Role) =>
+    openEditRefused(refusalError(kind, { url: BILL_URL }), role);
+
+  describe('for a permission the role lacks', () => {
+    const cases = kindsShowing('permission').flatMap((kind) => ROLE_SENTENCES.map((r) => ({ kind, ...r })));
+
+    it.each(cases)(
+      'says a $role account may not see this, with no form and no retry, after a $kind refusal',
+      async ({ kind, role, sentence }) => {
+        const { el, shown } = await refusedBill(kind, role);
+
+        expect(shown.surfaces).toEqual(['permission']);
+        expect(shown.heading).toBe('coreForbidden.accessBlocked');
+        expect(shown.body).toBe(sentence);
+        expect(shown.retry).toBe(false);
+        expect(shown.text).not.toContain('common.retry');
+        expect(shown.text).not.toContain(CANCAN_MESSAGE);
+        expect(shown.text).not.toContain('hostUtilities.billDetails');
+        expect(el.querySelector('form')).toBeNull();
+      },
+    );
+
+    it('reads the bill without the global toast', async () => {
+      const { deps } = await refusedBill('permissionCanCan');
+
+      // The stub has no getUtilityBill of its own; `open` assigns the mock.
+      const ops = deps.ops as unknown as Pick<HostOpsApi, 'getUtilityBill'>;
+      expect(ops.getUtilityBill).toHaveBeenCalledWith(HOSTEL_ID, 'aVXGyz', QUIET);
+    });
+  });
+
+  describe('for a failure that is not a permission refusal', () => {
+    it.each<RefusalKind>(['notFound', 'serverError'])('shows the generic error with Retry, not the panel, after a %s refusal', async (kind) => {
+      const { shown } = await refusedBill(kind);
+
+      expect(shown.surfaces).toEqual(['error']);
+      expect(shown.heading).toBe('states.somethingWentWrong');
+      expect(shown.retry).toBe(true);
+      expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+    });
+
+    // The bill's own read has no offline variant: only the form's three reads set the page's networkError.
+    it.each(kindsShowing('network'))('shows the generic error with Retry after a %s failure', async (kind) => {
+      const { shown } = await refusedBill(kind);
+
+      expect(shown.surfaces).toEqual(['error']);
+      expect(shown.heading).toBe('states.somethingWentWrong');
+      expect(shown.retry).toBe(true);
+    });
+  });
+});
+
+describe('AddBill — the add form reads', () => {
+  afterEach(() => {
+    TestBed.inject(HostPropertyStore).clear();
+    TestBed.inject(SessionStore).clear();
+  });
+
+  it('asks for rooms, renters and the bill options without the global toast', async () => {
+    const fixtureDeps = await openRefused({});
+    // `openRefused` assigns the reads the stub lacks.
+    const ops = fixtureDeps.deps.ops as unknown as Pick<HostOpsApi, 'rooms' | 'renters' | 'utilityBillFormOptions'>;
+
+    expect(ops.rooms).toHaveBeenCalledWith(HOSTEL_ID, 1, PAGE_SIZE, {}, QUIET);
+    expect(ops.renters).toHaveBeenCalledWith(HOSTEL_ID, 1, PAGE_SIZE, {}, QUIET);
+    expect(ops.utilityBillFormOptions).toHaveBeenCalledWith(HOSTEL_ID, QUIET);
+  });
+});
+
+describe('AddBill — a refused save', () => {
+  afterEach(() => TestBed.inject(SessionStore).clear());
+
+  const permissionCases = kindsShowing('permission').flatMap((kind) => TOAST_BY_ROLE.map((r) => ({ kind, ...r })));
+  const refused = (kind: RefusalKind, method: string) =>
+    throwError(() => refusalError(kind, { method, url: `${HOSTEL_API}/utility_bills` }));
+
+  it.each(permissionCases)(
+    'says $role-worded text inline, with no toast, when creating is refused as $kind',
+    ({ kind, role, key }) => {
+      const { form, creates, notifications } = open({ billId: null, role, create: () => refused(kind, 'POST') });
+
+      saveNew(form);
+
+      expect(creates).toHaveLength(1);
+      expect(form.submitError()).toBe(key);
+      expect(notifications.raised).toEqual([]);
+      expect(notifications.apiErrors).toEqual([]);
+    },
+  );
+
+  it.each<Role>(['host', 'manager'])('says the plan has no CRM inline, with no toast, when creating is refused for a %s account', (role) => {
+    const { form, notifications } = open({ billId: null, role, create: () => refused('crmRequired', 'POST') });
+
+    saveNew(form);
+
+    expect(form.submitError()).toBe('hostBookings.planHasNoCrm');
+    expect(notifications.raised).toEqual([]);
+    expect(notifications.apiErrors).toEqual([]);
+  });
+
+  it('says the plan has no CRM inline, with no toast, when updating is refused', () => {
+    const { form, notifications } = open({ role: 'host', update: () => refused('crmMessageOnly', 'PATCH') });
+
+    form.addToBatch();
+
+    expect(form.submitError()).toBe('hostBookings.planHasNoCrm');
+    expect(notifications.raised).toEqual([]);
+    expect(notifications.apiErrors).toEqual([]);
+  });
+
+  it.each(['create', 'update'] as const)('shows the generic line and hands a 422 to the app-wide notifier once when %s fails', (action) => {
+    const failing = refused('unprocessable', action === 'create' ? 'POST' : 'PATCH');
+    const { form, notifications } =
+      action === 'create'
+        ? open({ billId: null, role: 'host', create: () => failing })
+        : open({ role: 'host', update: () => failing });
+
+    if (action === 'create') saveNew(form);
+    else form.addToBatch();
+
+    expect(form.submitError()).toBe('hostUtilities.failedToSaveTheBill');
+    expect(notifications.apiErrors).toHaveLength(1);
+    expect(notifications.apiErrors[0].status).toBe(422);
+    expect(notifications.raised).toEqual([]);
+  });
+
+  it('clears the line and leaves the page once a retried save succeeds', () => {
+    const { form, creates } = open({ billId: null, role: 'host' });
+    form.submitError.set('hostUtilities.failedToSaveTheBill');
+
+    saveNew(form);
+
+    expect(creates).toHaveLength(1);
+    expect(form.submitError()).toBeNull();
+  });
+
+  it('sends the create and the update without the global toast', () => {
+    const created = open({ billId: null, role: 'host' });
+    saveNew(created.form);
+    expect(created.options.create).toEqual([QUIET]);
+
+    const updated = open({ role: 'host' });
+    updated.form.addToBatch();
+    expect(updated.options.update).toEqual([QUIET]);
   });
 });

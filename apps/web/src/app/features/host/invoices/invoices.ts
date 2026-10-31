@@ -35,9 +35,15 @@ import { ApiError, Invoice, InvoiceKind, InvoiceStatus } from '@hostelhive/data-
 import { API_CONFIG } from '@core/api-config';
 import { NotificationService } from '@core/notification.service';
 import { toToastCopy } from '@core/errors/api-error-message';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isPermissionRefusal } from '@core/host-access/host-access';
+import {
+  RefusalAudience,
+  isCrmRequired,
+  isPermissionRefusal,
+  pageNotAllowedKey,
+} from '@core/host-access/host-access';
 import { isNetworkError } from '@util/network-error';
 import { invoiceFilterGroups } from '@app/util/filter-configs/invoice-filter-groups';
 import { invoiceTableCols, buildInvoiceId, formatInvoiceDate } from '@app/util/table-configs/invoice-table-cols';
@@ -197,6 +203,7 @@ export class Invoices {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly session = inject(SessionStore);
+  private readonly actionFailureToast = injectActionFailureToast();
 
   /**
    * Back to the property's overview.
@@ -340,7 +347,8 @@ export class Invoices {
           else if (nightly) filters['s[booking.guest_name]'] = searchTerm;
           else filters['s[renter.full_name]'] = searchTerm;
         }
-        return this.api.invoices(hostelId, page, this.PAGE_SIZE, filters).pipe(
+        // The page draws its own error state, so the interceptor's toast would be a second message.
+        return this.api.invoices(hostelId, page, this.PAGE_SIZE, filters, { suppressErrorToast: true }).pipe(
           tap(() => this.fetching.set(false)),
           map((res): ViewState => ({
             loading: false,
@@ -569,8 +577,7 @@ export class Invoices {
         return;
       }
       if ('failed' in found) {
-        const { title, message } = toToastCopy(found.failed);
-        this.notifications.show({ kind: 'error', title, message });
+        this.reportLookupFailure(found.failed);
         this.closePreview();
         return;
       }
@@ -995,13 +1002,12 @@ export class Invoices {
     this.deletePending.set(null);
 
     this.deleting.set(true);
-    this.api.deleteInvoice(hostelId, inv.id).subscribe({
+    this.api.deleteInvoice(hostelId, inv.id, { suppressErrorToast: true }).subscribe({
       next: () => { this.deleting.set(false); },
       error: (err: ApiError) => {
         this.deletedIds.update((s) => { const n = new Set(s); n.delete(inv.id); return n; });
         this.deleting.set(false);
-        const { title, message } = toToastCopy(err);
-        this.notifications.show({ kind: 'error', title, message }, 0);
+        this.reportActionFailure(err);
       },
     });
   }
@@ -1096,15 +1102,12 @@ export class Invoices {
       return;
     }
 
-    this.api.markInvoicePaid(hostelId, inv.id).subscribe({
+    this.api.markInvoicePaid(hostelId, inv.id, { suppressErrorToast: true }).subscribe({
       next: (settled) => {
         this.notifications.success('Invoice marked paid', `${buildInvoiceId(inv)} is now settled.`);
         this.applySettled(settled);
       },
-      error: (err: ApiError) => {
-        const { title, message } = toToastCopy(err);
-        this.notifications.show({ kind: 'error', title, message }, 0);
-      },
+      error: (err: ApiError) => this.reportActionFailure(err),
     });
   }
 
@@ -1139,7 +1142,7 @@ export class Invoices {
     const bookingId = prompt.offerBooking && this.alsoPayBooking() ? inv.booking?.id : undefined;
 
     this.paying.set(true);
-    this.api.markInvoicePaid(hostelId, inv.id).subscribe({
+    this.api.markInvoicePaid(hostelId, inv.id, { suppressErrorToast: true }).subscribe({
       next: (settled) => {
         this.applySettled(settled);
         if (!bookingId) {
@@ -1165,10 +1168,42 @@ export class Invoices {
       },
       error: (err: ApiError) => {
         this.finishPay();
-        const { title, message } = toToastCopy(err);
-        this.notifications.show({ kind: 'error', title, message }, 0);
+        this.reportActionFailure(err);
       },
     });
+  }
+
+  /** Who a refusal is worded for: the owner, whose missing permission is for support to grant, or staff. */
+  private refusalAudience(): RefusalAudience {
+    return { owner: this.session.hasRole('host') };
+  }
+
+  /**
+   * Reports a bill action the server refused. A plan without CRM or a permission the user lacks
+   * gets its own translated sentence rather than the server's English; any other failure keeps
+   * the server's reading. Pinned, as the interceptor pins a 4xx, because these requests go
+   * without its toast.
+   */
+  private reportActionFailure(err: ApiError): void {
+    this.actionFailureToast(err);
+  }
+
+  /**
+   * Reports a deep-linked bill that could not be read. One the user may not see is worded as the
+   * page refusal is, and a plan without CRM as such; anything else keeps the server's reading.
+   */
+  private reportLookupFailure(err: ApiError): void {
+    const key = isCrmRequired(err)
+      ? 'hostBookings.planHasNoCrm'
+      : isPermissionRefusal(err)
+        ? pageNotAllowedKey(this.refusalAudience())
+        : null;
+    if (key) {
+      this.notifications.show({ kind: 'error', title: this.i18n.translate<string>(key) });
+      return;
+    }
+    const { title, message } = toToastCopy(err);
+    this.notifications.show({ kind: 'error', title, message });
   }
 
   protected cancelPay(): void {

@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { NotificationService } from '@core/notification.service';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostOpsApi, HostPropertyStore, ImageUploadService } from '@services';
 import { HostBookingsApi } from '@features/host/bookings/host-bookings-api';
 import { HOSTEL_ID, apiError, hostBooking, room, roomShow } from '@app/testing/host-builders';
@@ -48,6 +49,7 @@ function setUp(opts: OpenOptions = {}) {
 
   TestBed.configureTestingModule({
     providers: [
+      provideI18nTesting(),
       { provide: HostOpsApi, useValue: ops },
       { provide: HostBookingsApi, useValue: bookings },
       { provide: HostPropertyStore, useValue: store },

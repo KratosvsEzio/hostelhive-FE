@@ -9,8 +9,12 @@ import {
   HostAccessEvents,
   classifyHostAccess,
   hostAccessTarget,
+  actionRefusalKey,
   isCrmRequired,
   isPermissionRefusal,
+  isPlanInactive,
+  pageNotAllowedKey,
+  planInactiveKey,
 } from './host-access';
 
 const BASE = 'https://api.test';
@@ -314,6 +318,81 @@ describe('isPermissionRefusal', () => {
 
   it('never reads the message', () => {
     expect(isPermissionRefusal({ status: 403, message: CRM_REQUIRED_MESSAGE })).toBe(true);
+  });
+});
+
+describe('isPlanInactive', () => {
+  it('is true for a 400 "need to subscribe"', () => {
+    expect(isPlanInactive({ status: 400, serverMessages: [SUBSCRIBE] })).toBe(true);
+  });
+
+  it('matches the message case-insensitively and among others', () => {
+    expect(isPlanInactive({ status: 400, serverMessages: ['Bad', 'YOU NEED TO SUBSCRIBE'] })).toBe(true);
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    { why: 'another 400', err: { status: 400, serverMessages: ['Room number has already been taken'] } },
+    { why: 'a 400 with no messages', err: { status: 400 } },
+    { why: 'the message on a 403', err: { status: 403, serverMessages: [SUBSCRIBE] } },
+    { why: 'the message on a 422', err: { status: 422, serverMessages: [SUBSCRIBE] } },
+    { why: 'only the message field', err: { status: 400, message: SUBSCRIBE } },
+    { why: 'a non-string message', err: { status: 400, serverMessages: [42] } },
+    { why: 'null', err: null },
+    { why: 'a string', err: SUBSCRIBE },
+  ])('is false for $why', ({ err }) => {
+    expect(isPlanInactive(err)).toBe(false);
+  });
+});
+
+describe('actionRefusalKey', () => {
+  const PERMISSION = {
+    status: 403,
+    code: 'unknown_error',
+    serverMessages: ['You are not authorized to access this page.'],
+  };
+  const CRM = { status: 403, code: CRM_REQUIRED_CODE, serverMessages: [CRM_REQUIRED_MESSAGE] };
+
+  it('words a permission refusal for staff by default', () => {
+    expect(actionRefusalKey(PERMISSION)).toBe('hostBookings.notAllowed');
+    expect(actionRefusalKey(PERMISSION, { owner: false })).toBe('hostBookings.notAllowed');
+  });
+
+  it('words a permission refusal for the owner', () => {
+    expect(actionRefusalKey(PERMISSION, { owner: true })).toBe('hostBookings.notAllowedOwner');
+  });
+
+  it.each([false, true])('says the plan lacks CRM whoever is signed in (owner %s)', (owner) => {
+    expect(actionRefusalKey(CRM, { owner })).toBe('hostBookings.planHasNoCrm');
+    expect(actionRefusalKey({ status: 403, serverMessages: [CRM_REQUIRED_MESSAGE] }, { owner })).toBe(
+      'hostBookings.planHasNoCrm',
+    );
+  });
+
+  it.each<{ why: string; err: unknown }>([
+    { why: "the rate limiter's coded 403", err: { status: 403, code: 'forbidden', serverMessages: ['Forbidden'] } },
+    { why: 'a 400 "need to subscribe"', err: { status: 400, serverMessages: [SUBSCRIBE] } },
+    { why: 'a 404', err: { status: 404 } },
+    { why: 'a 422', err: { status: 422, serverMessages: ['Invalid'] } },
+    { why: 'a 500', err: { status: 500 } },
+    { why: 'no response', err: { status: 0 } },
+    { why: 'null', err: null },
+  ])('leaves $why to the caller', ({ err }) => {
+    expect(actionRefusalKey(err, { owner: true })).toBeNull();
+    expect(actionRefusalKey(err)).toBeNull();
+  });
+});
+
+describe('pageNotAllowedKey and planInactiveKey', () => {
+  it('word the page refusal for staff by default and for the owner', () => {
+    expect(pageNotAllowedKey()).toBe('hostAccess.pageNotAllowed');
+    expect(pageNotAllowedKey({ owner: false })).toBe('hostAccess.pageNotAllowed');
+    expect(pageNotAllowedKey({ owner: true })).toBe('hostAccess.pageNotAllowedOwner');
+  });
+
+  it('word the lapsed plan for staff by default and for the owner', () => {
+    expect(planInactiveKey()).toBe('hostAccess.offlineStaff');
+    expect(planInactiveKey({ owner: false })).toBe('hostAccess.offlineStaff');
+    expect(planInactiveKey({ owner: true })).toBe('hostAccess.offline');
   });
 });
 

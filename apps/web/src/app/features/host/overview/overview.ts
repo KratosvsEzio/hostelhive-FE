@@ -89,6 +89,11 @@ interface UpcomingState {
  * list has no distinct-renter aggregate, so the tenants are counted from the bills themselves.
  */
 const UNPAID_BILLS_LIMIT = 500;
+/**
+ * For the reads whose failure the page draws itself (the KPI row, the charts, the upcoming strip):
+ * the global toast would repeat it, and on a refused permission add the server's English.
+ */
+const QUIET = { suppressErrorToast: true } as const;
 
 const UPCOMING_LOADING: UpcomingState = { loading: true, error: false, days: [], today: null };
 const UPCOMING_IDLE: UpcomingState = { loading: false, error: false, days: [], today: null };
@@ -192,7 +197,7 @@ export class HostOverview {
           switchMap((zone) => {
             const today = todayIn(zone, this.openedAt);
             const { from, to } = stripRange(dayToLocalDate(today));
-            return this.bookingsApi.calendar(hostelId, from, to).pipe(
+            return this.bookingsApi.calendar(hostelId, from, to, QUIET).pipe(
               map((cal): UpcomingState => ({ loading: false, error: false, days: cal.days, today })),
               catchError(() => of<UpcomingState>({ loading: false, error: true, days: [], today })),
             );
@@ -328,7 +333,7 @@ export class HostOverview {
   protected readonly state = toSignal(
     toObservable(this.hostelReload).pipe(
       switchMap(({ hostelId }) =>
-        this.api.overviewCards(hostelId).pipe(
+        this.api.overviewCards(hostelId, QUIET).pipe(
           map((data): ViewState => ({ loading: false, error: false, networkError: false, data })),
           startWith<ViewState>({ loading: true, error: false, networkError: false, data: null }),
           catchError((err) => {
@@ -351,7 +356,7 @@ export class HostOverview {
     toObservable(this.hostelReload).pipe(
       switchMap(({ hostelId: slug }) =>
         slug
-          ? this.api.monthlyRevenue(slug).pipe(
+          ? this.api.monthlyRevenue(slug, undefined, undefined, QUIET).pipe(
               map((data) => ({ loading: false, error: false, data })),
               startWith({ loading: true, error: false, data: [] as RevenuePoint[] }),
               catchError(() => of({ loading: false, error: true, data: [] as RevenuePoint[] })),
@@ -368,7 +373,7 @@ export class HostOverview {
     toObservable(this.hostelReload).pipe(
       switchMap(({ hostelId: slug }) =>
         slug
-          ? this.api.tenantMovement(slug).pipe(
+          ? this.api.tenantMovement(slug, undefined, undefined, QUIET).pipe(
               map((data) => ({ loading: false, error: false, data })),
               startWith({ loading: true, error: false, data: [] as TenantMovement[] }),
               catchError(() => of({ loading: false, error: true, data: [] as TenantMovement[] })),

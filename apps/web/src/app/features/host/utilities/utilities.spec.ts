@@ -7,9 +7,10 @@ import { UtilityBill } from '@hostelhive/data-access';
 import { CANCAN_MESSAGE, RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, sessionUser } from '@app/testing/host-builders';
 import { hostPageDeps, hostPageProviders } from '@app/testing/host-page';
-import { seedHostPropertyStore } from '@app/testing/host-stubs';
+import { NotificationSpy, seedHostPropertyStore } from '@app/testing/host-stubs';
 import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { API_CONFIG } from '@core/api-config';
+import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import type { Role } from '@core/auth/roles';
 import { SessionStore } from '@core/auth/session-store';
 import { Utilities } from './utilities';
@@ -42,12 +43,18 @@ function listResponse(balance: number, dueCount: number) {
 
 const click = { stopPropagation: () => undefined } as unknown as MouseEvent;
 
-function setup(deleteResult: () => ReturnType<HostOpsApi['deleteUtilityBill']>) {
+/** The options a quiet request carries, so the interceptor raises no toast of its own. */
+const QUIET = { suppressErrorToast: true };
+
+function setup(deleteResult: () => ReturnType<HostOpsApi['deleteUtilityBill']>, role?: Role) {
   const utilityBills = vi.fn().mockReturnValueOnce(of(listResponse(1055, 2)));
   const deleteUtilityBill = vi.fn(deleteResult);
+  const notifications = new NotificationSpy();
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
+      provideI18nTesting(),
+      notifications.provider(),
       { provide: HostOpsApi, useValue: { utilityBills, deleteUtilityBill } },
       { provide: HostPropertyStore, useValue: { selected: signal('zppsla'), timeZoneOf: () => of(null) } },
       { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
@@ -55,9 +62,10 @@ function setup(deleteResult: () => ReturnType<HostOpsApi['deleteUtilityBill']>) 
     ],
   });
   TestBed.overrideComponent(Utilities, { set: { template: '', imports: [] } });
+  if (role) TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
   const fixture = TestBed.createComponent(Utilities);
   fixture.detectChanges();
-  return { cmp: fixture.componentInstance as unknown as UtilitiesShape, fixture, utilityBills, deleteUtilityBill };
+  return { cmp: fixture.componentInstance as unknown as UtilitiesShape, fixture, utilityBills, deleteUtilityBill, notifications };
 }
 
 describe('Utilities — delete refreshes the summary cards', () => {
@@ -70,9 +78,10 @@ describe('Utilities — delete refreshes the summary cards', () => {
     cmp.confirmDelete();
     fixture.detectChanges();
 
-    expect(deleteUtilityBill).toHaveBeenCalledWith('zppsla', 'GPfbpD');
+    expect(deleteUtilityBill).toHaveBeenCalledWith('zppsla', 'GPfbpD', QUIET);
     expect(utilityBills).toHaveBeenCalledTimes(2);
-    expect(utilityBills.mock.calls[1]).toEqual(utilityBills.mock.calls[0]);
+    // The follow-up totals read repeats the table request without the quiet options.
+    expect(utilityBills.mock.calls[1]).toEqual(utilityBills.mock.calls[0].slice(0, 4));
     expect(cmp.aggs()?.balance).toBe(65);
     expect(cmp.statuses()).toEqual([{ name: 'Due', slug: 'due', count: 1 }]);
     expect(cmp.bills().map((b) => b.id)).toEqual(['bCGPAU']);
@@ -250,5 +259,73 @@ describe('Utilities — a refused list load', () => {
       expect(shown.retry).toBe(true);
       expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
     });
+  });
+});
+
+const DELETE_URL = `${UTILITY_BILLS_URL}/GPfbpD`;
+
+/** What the page toasts for each role after a permission refusal. */
+const TOAST_BY_ROLE = [
+  { role: 'host', title: 'hostBookings.notAllowedOwner' },
+  { role: 'manager', title: 'hostBookings.notAllowed' },
+] as const satisfies readonly { role: Role; title: string }[];
+
+describe('Utilities — a refused delete', () => {
+  afterEach(() => TestBed.inject(SessionStore).clear());
+
+  const refusedDelete = (kind: RefusalKind, role?: Role) =>
+    setup(() => throwError(() => refusalError(kind, { method: 'DELETE', url: DELETE_URL })), role);
+  const permissionCases = kindsShowing('permission').flatMap((kind) => TOAST_BY_ROLE.map((r) => ({ kind, ...r })));
+
+  it('sends the list read and the delete without the global toast', () => {
+    const { cmp, utilityBills, deleteUtilityBill } = setup(() => of(undefined));
+    utilityBills.mockReturnValueOnce(of(listResponse(65, 1)));
+
+    cmp.promptDelete(BILL_A, click);
+    cmp.confirmDelete();
+
+    expect(utilityBills.mock.calls[0][4]).toEqual(QUIET);
+    expect(deleteUtilityBill).toHaveBeenCalledWith('zppsla', 'GPfbpD', QUIET);
+  });
+
+  it.each(permissionCases)(
+    'raises one pinned $role-worded toast, restores the row and leaves the totals after a $kind refusal',
+    ({ kind, role, title }) => {
+      const { cmp, utilityBills, notifications } = refusedDelete(kind, role);
+
+      cmp.promptDelete(BILL_A, click);
+      cmp.confirmDelete();
+
+      expect(notifications.raised).toEqual([{ kind: 'error', title, ttlMs: 0 }]);
+      expect(notifications.apiErrors).toEqual([]);
+      expect(JSON.stringify(notifications.raised)).not.toContain(CANCAN_MESSAGE);
+      expect(cmp.bills().map((b) => b.id)).toEqual(['GPfbpD', 'bCGPAU']);
+      expect(utilityBills).toHaveBeenCalledTimes(1);
+      expect(cmp.aggs()?.balance).toBe(1055);
+    },
+  );
+
+  it.each<Role>(['host', 'manager'])('raises one pinned plan toast for a %s account when the plan has no CRM', (role) => {
+    const { cmp, utilityBills, notifications } = refusedDelete('crmRequired', role);
+
+    cmp.promptDelete(BILL_A, click);
+    cmp.confirmDelete();
+
+    expect(notifications.raised).toEqual([{ kind: 'error', title: 'hostBookings.planHasNoCrm', ttlMs: 0 }]);
+    expect(notifications.apiErrors).toEqual([]);
+    expect(cmp.bills().map((b) => b.id)).toEqual(['GPfbpD', 'bCGPAU']);
+    expect(utilityBills).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands a server error to the app-wide notifier once and raises no toast of its own', () => {
+    const { cmp, notifications } = refusedDelete('serverError', 'host');
+
+    cmp.promptDelete(BILL_A, click);
+    cmp.confirmDelete();
+
+    expect(notifications.raised).toEqual([]);
+    expect(notifications.apiErrors).toHaveLength(1);
+    expect(notifications.apiErrors[0].status).toBe(500);
+    expect(cmp.bills().map((b) => b.id)).toEqual(['GPfbpD', 'bCGPAU']);
   });
 });

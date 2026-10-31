@@ -2,8 +2,9 @@ import { Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NEVER, Observable, of } from 'rxjs';
 import { vi } from 'vitest';
-import { HostListingsData } from '@hostelhive/data-access';
+import { ApiError, HostListingsData } from '@hostelhive/data-access';
 import { NotificationService, Toast, ToastKind } from '@core/notification.service';
+import { API_ERROR_NOTIFIER } from '@core/tokens';
 import { HostOpsApi } from '@services/host-ops-api';
 import { HostPropertyStore } from '@services/host-property-store';
 import { HostShellApi } from '@services/host-shell-api';
@@ -86,6 +87,10 @@ export interface RaisedToast {
 /**
  * A `NotificationService` whose entry points are `vi.fn`s, plus {@link raised}: every toast in the
  * order it was raised, whichever method raised it, so "exactly one toast" is one assertion.
+ *
+ * It also stands in for the app-wide error notifier (`API_ERROR_NOTIFIER`): {@link apiErrors} is
+ * every failure handed to it, which a page does for a quiet request whose failure should read
+ * exactly as the global toast would.
  */
 export class NotificationSpy {
   readonly raised: RaisedToast[] = [];
@@ -99,9 +104,16 @@ export class NotificationSpy {
   success = vi.fn((title: string, message?: string): number => this.push({ kind: 'success', title, message }));
   dismiss = vi.fn<(id: number) => void>();
   muteErrors = vi.fn((): (() => void) => () => undefined);
+  readonly apiErrors: ApiError[] = [];
+  notifyApiError = vi.fn((error: ApiError): void => {
+    this.apiErrors.push(error);
+  });
 
   provider(): Provider {
-    return { provide: NotificationService, useValue: this };
+    return [
+      { provide: NotificationService, useValue: this },
+      { provide: API_ERROR_NOTIFIER, useValue: this.notifyApiError },
+    ];
   }
 
   private push(toast: RaisedToast): number {

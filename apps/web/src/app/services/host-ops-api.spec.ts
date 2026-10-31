@@ -720,6 +720,37 @@ describe('HostOpsApi request options', () => {
         api.bulkCreateRooms(HOSTEL_ID, [{ room_number: '101', room_type_id: 'rt1', capacity: 2 }], opts).subscribe(),
       plainArgCount: 2,
     },
+    // The recorder's reply is not each endpoint's shape, so a mapper may throw; only the request is under test.
+    ...(
+      [
+        ['rooms', (api, opts) => api.rooms(HOSTEL_ID, 1, 10, {}, opts)],
+        ['deleteRoom', (api, opts) => api.deleteRoom(HOSTEL_ID, 'rm-1', opts)],
+        ['roomDetail', (api, opts) => api.roomDetail(HOSTEL_ID, 'rm-1', opts)],
+        ['roomShow', (api, opts) => api.roomShow(HOSTEL_ID, 'rm-1', opts)],
+        ['roomFormOptions', (api, opts) => api.roomFormOptions(HOSTEL_ID, opts)],
+        ['renters', (api, opts) => api.renters(HOSTEL_ID, 1, 10, {}, opts)],
+        ['getRenter', (api, opts) => api.getRenter(HOSTEL_ID, 'rn-1', opts)],
+        ['createRenter', (api, opts) => api.createRenter(HOSTEL_ID, {} as never, opts)],
+        ['updateRenter', (api, opts) => api.updateRenter(HOSTEL_ID, 'rn-1', {}, opts)],
+        ['patchRenter', (api, opts) => api.patchRenter(HOSTEL_ID, 'rn-1', { disposition_id: 1 }, opts)],
+        ['inviteTenant', (api, opts) => api.inviteTenant(HOSTEL_ID, 'rn-1', opts)],
+        ['invoices', (api, opts) => api.invoices(HOSTEL_ID, 1, 10, {}, opts)],
+        ['utilityBills', (api, opts) => api.utilityBills(HOSTEL_ID, 1, 10, {}, opts)],
+        ['createInvoice', (api, opts) => api.createInvoice(HOSTEL_ID, {} as never, opts)],
+        ['updateInvoice', (api, opts) => api.updateInvoice(HOSTEL_ID, 'rb-1', {} as never, opts)],
+        ['deleteInvoice', (api, opts) => api.deleteInvoice(HOSTEL_ID, 'rb-1', opts)],
+        ['deleteRenter', (api, opts) => api.deleteRenter(HOSTEL_ID, 'rn-1', opts)],
+        ['deleteUtilityBill', (api, opts) => api.deleteUtilityBill(HOSTEL_ID, 'ub-1', opts)],
+        ['getUtilityBill', (api, opts) => api.getUtilityBill(HOSTEL_ID, 'ub-1', opts)],
+        ['updateUtilityBill', (api, opts) => api.updateUtilityBill(HOSTEL_ID, 'ub-1', {} as never, opts)],
+        ['utilityBillFormOptions', (api, opts) => api.utilityBillFormOptions(HOSTEL_ID, opts)],
+        ['createUtilityBill', (api, opts) => api.createUtilityBill(HOSTEL_ID, {} as never, opts)],
+      ] as [string, (api: HostOpsApi, opts?: ApiRequestOptions) => Observable<unknown>][]
+    ).map(([name, call]) => ({
+      name,
+      run: (api: HostOpsApi, opts?: ApiRequestOptions) => call(api, opts).subscribe({ error: () => undefined }),
+      plainArgCount: 2,
+    })),
   ];
 
   function setUpRecorder(): { api: HostOpsApi; http: ApiClientRecorder } {

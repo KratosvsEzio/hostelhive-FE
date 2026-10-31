@@ -32,10 +32,11 @@ import {
 import { HostOpsApi, HostPropertyStore, RoomAggs, RoomRenter, RoomStatusOption, RoomTypeOption } from '@services';
 import { ApiError, HostRoom as Room, RoomStatus } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
-import { toToastCopy } from '@core/errors/api-error-message';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isPermissionRefusal } from '@core/host-access/host-access';
+import { RefusalAudience, actionRefusalKey, isPermissionRefusal } from '@core/host-access/host-access';
+import { SessionStore } from '@core/auth/session-store';
 import { isNetworkError } from '@util/network-error';
 import { displayLabelFor } from '@util/room-types';
 import { ROOMS_TABLE_COLS } from '@app/util/table-configs/rooms-table-cols';
@@ -45,7 +46,10 @@ import { TranslocoPipe } from '@jsverse/transloco';
 /** The grid renders every room at once, so fetch a large single page instead of paginating. */
 const ROOMS_LIMIT = 1000;
 
-/** For the room saves, whose failure the dialog shows inline: the global toast would repeat it. */
+/**
+ * For requests whose failure this page reports itself: the list in its error state, the room
+ * saves inline in the dialog, the deletes in their own toast. The global toast would repeat it.
+ */
 const QUIET = { suppressErrorToast: true } as const;
 
 interface ViewState {
@@ -200,6 +204,8 @@ export class Rooms {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notifications = inject(NotificationService);
+  private readonly session = inject(SessionStore);
+  private readonly actionFailureToast = injectActionFailureToast();
   private readonly refresh = signal(0);
 
   /** Locally-mutated copy so create/edit reflect immediately (no write API yet). */
@@ -264,7 +270,7 @@ export class Rooms {
     toObservable(this.rtKey).pipe(
       switchMap(({ hostelId }) => {
         if (!hostelId) return of<RoomTypesState>({ loading: false, error: false, data: [] });
-        return this.api.roomFormOptions(hostelId).pipe(
+        return this.api.roomFormOptions(hostelId, QUIET).pipe(
           map((data): RoomTypesState => ({ loading: false, error: false, data })),
           startWith<RoomTypesState>({ loading: true, error: false, data: [] }),
           catchError(() => of<RoomTypesState>({ loading: false, error: true, data: [] })),
@@ -459,7 +465,7 @@ export class Rooms {
         const filters: Record<string, string> = {};
         if (search.trim()) filters['f[room_number]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
-        return this.api.rooms(hostelId, page, ROOMS_LIMIT, filters).pipe(
+        return this.api.rooms(hostelId, page, ROOMS_LIMIT, filters, QUIET).pipe(
           map((res): ViewState => ({ loading: false, error: false, networkError: false, data: res.rooms, total: res.total, aggs: res.aggs, statuses: res.statuses })),
           startWith<ViewState>({ loading: true, error: false, networkError: false, data: null, total: 0, aggs: null, statuses: [] }),
           catchError((err) => {
@@ -759,7 +765,7 @@ export class Rooms {
     this.renterDeletePending.set(null);
     this.renterDeleting.set(true);
     // The backend exposes no DELETE for renters, so this always 404s; the revert + toast make the failure visible.
-    this.api.deleteRenter(hostelId, renter.id).subscribe({
+    this.api.deleteRenter(hostelId, renter.id, QUIET).subscribe({
       next: () => { this.renterDeleting.set(false); },
       error: (err: ApiError) => {
         this.deletedRenterIds.update((s) => { const n = new Set(s); n.delete(renter.id); return n; });
@@ -799,7 +805,7 @@ export class Rooms {
     this.shiftAggs(r, null);
     const hostelId = this.store.selected();
     if (!hostelId) return;
-    this.api.deleteRoom(hostelId, r.id).subscribe({
+    this.api.deleteRoom(hostelId, r.id, QUIET).subscribe({
       error: (err: ApiError) => {
         this.refresh.update((n) => n + 1);
         this.notifyDeleteFailure(err);
@@ -811,10 +817,26 @@ export class Rooms {
     this.roomDeletePending.set(null);
   }
 
-  /** Surfaces a delete failure as a pinned toast so the reverted item isn't a silent no-op. */
+  /**
+   * Surfaces a delete failure as a pinned toast so the reverted item isn't a silent no-op. A
+   * refusal for the plan or a permission is worded in the user's language rather than shown in
+   * the server's English.
+   */
   private notifyDeleteFailure(err: ApiError): void {
-    const { title, message } = toToastCopy(err);
-    this.notifications.show({ kind: 'error', title, message }, 0);
+    this.actionFailureToast(err);
+  }
+
+  /**
+   * Who a refusal is worded for, read as it lands: a permission the owner's account lacks is
+   * for HostelHive support to grant, one a manager's lacks is the owner's to ask about.
+   */
+  private refusalAudience(): RefusalAudience {
+    return { owner: this.session.hasRole('host') };
+  }
+
+  /** The inline message for a failed room save: the refusal's own wording, else `fallback`. */
+  private saveFailureKey(err: unknown, fallback: string): string {
+    return actionRefusalKey(err, this.refusalAudience()) ?? fallback;
   }
 
   protected save(): void {
@@ -840,9 +862,9 @@ export class Rooms {
             this.close();
             this.replaceRoom(updated);
           },
-          error: () => {
+          error: (err: unknown) => {
             this.saving.set(false);
-            this.saveError.set('hostRooms.couldNotUpdateRoom');
+            this.saveError.set(this.saveFailureKey(err, 'hostRooms.couldNotUpdateRoom'));
           },
         });
       return;
@@ -870,7 +892,8 @@ export class Rooms {
           this.close();
           this.insertRoom(created);
         },
-        error: () => this.saveError.set('hostRooms.couldNotCreateRoom'),
+        error: (err: unknown) =>
+          this.saveError.set(this.saveFailureKey(err, 'hostRooms.couldNotCreateRoom')),
       });
   }
 
@@ -1032,7 +1055,8 @@ export class Rooms {
           this.closeBulk();
           this.showAllRooms(all);
         },
-        error: () => this.bulkError.set('hostRooms.couldNotCreateRooms'),
+        error: (err: unknown) =>
+          this.bulkError.set(this.saveFailureKey(err, 'hostRooms.couldNotCreateRooms')),
       });
   }
 

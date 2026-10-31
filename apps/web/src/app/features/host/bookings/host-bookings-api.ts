@@ -58,11 +58,17 @@ export class HostBookingsApi {
    * **The path spelling is the server's.** `booking_calender` is missing its second `a`; it is
    * written exactly as the backend exposes it, and correcting it silently would 404.
    */
-  calendar(hostelId: string, startDate: string, endDate: string): Observable<BookingCalendar> {
+  calendar(
+    hostelId: string,
+    startDate: string,
+    endDate: string,
+    opts?: HostBookingRequestOptions,
+  ): Observable<BookingCalendar> {
     return this.api
       .get<ApiBookingCalendarResponse>(
         `/api/host/hostels/${hostelId}/bookings/booking_calender`,
         { start_date: startDate, end_date: endDate },
+        ...contextArgs(opts),
       )
       .pipe(map(toCalendar));
   }
@@ -128,13 +134,17 @@ export class HostBookingsApi {
    * boundaries, so `2026-08-24` means that day at the property. A time with this browser's
    * offset — what used to be sent — pins the day to wherever the host happens to be.
    */
-  bookingsOn(hostelId: string, date: string): Observable<HostBooking[]> {
+  bookingsOn(hostelId: string, date: string, opts?: HostBookingRequestOptions): Observable<HostBooking[]> {
     return this.api
-      .get<ApiHostBookingListResponse>(`/api/host/hostels/${hostelId}/bookings`, {
-        ...pageParams(1, DAY_ARRIVALS_LIMIT),
-        'f[checkin_date][gte]': date,
-        'f[checkin_date][lte]': date,
-      })
+      .get<ApiHostBookingListResponse>(
+        `/api/host/hostels/${hostelId}/bookings`,
+        {
+          ...pageParams(1, DAY_ARRIVALS_LIMIT),
+          'f[checkin_date][gte]': date,
+          'f[checkin_date][lte]': date,
+        },
+        ...contextArgs(opts),
+      )
       .pipe(map((res) => (res.bookings ?? []).map(toHostBooking)));
   }
 

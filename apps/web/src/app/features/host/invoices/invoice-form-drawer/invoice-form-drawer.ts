@@ -21,8 +21,9 @@ import { Button, DatePicker, Dropdown, DropdownOption, Input } from '@hostelhive
 import { MoneyInput } from '@app/shared/money-input/money-input';
 
 import { HostOpsApi, HostPropertyStore, followToday, selectedHostelToday } from '@services';
-import { Invoice, Tenant } from '@hostelhive/data-access';
+import { ApiError, Invoice, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { PAGE_SIZE } from '@util/pagination';
 import {
   InvoiceForm,
@@ -77,6 +78,7 @@ export class InvoiceFormDrawer {
   private readonly api = inject(HostOpsApi);
   private readonly store = inject(HostPropertyStore);
   private readonly notifications = inject(NotificationService);
+  private readonly actionFailureToast = injectActionFailureToast();
   private readonly destroyRef = inject(DestroyRef);
 
   /** The hostel's date, which a new invoice is issued on by default. */
@@ -243,9 +245,11 @@ export class InvoiceFormDrawer {
     // whether the URL carries a bill id differ.
     const payload = toCreateInvoicePayload(f);
     const existing = this.invoice();
+    // Sent without the interceptor's toast: `reportSaveFailure` raises the only one.
+    const quiet = { suppressErrorToast: true };
     const request$ = existing
-      ? this.api.updateInvoice(hostelId, existing.id, payload)
-      : this.api.createInvoice(hostelId, payload);
+      ? this.api.updateInvoice(hostelId, existing.id, payload, quiet)
+      : this.api.createInvoice(hostelId, payload, quiet);
 
     this.saving.set(true);
     request$
@@ -261,9 +265,21 @@ export class InvoiceFormDrawer {
           );
           this.saved.emit(result ?? null);
         },
-        // One toast, raised by `errorInterceptor` with the server's own wording and pinned
-        // open for a 4xx. This handler owns the inline state only.
-        error: () => this.saving.set(false),
+        error: (err: ApiError) => {
+          this.saving.set(false);
+          this.reportSaveFailure(err);
+        },
       });
+  }
+
+  /**
+   * The one toast for a failed save. A plan without CRM or a permission the user lacks gets its
+   * own translated sentence, worded for the owner or staff, instead of the server's English.
+   * Anything else reads exactly as `errorInterceptor`'s toast would have, since the request is
+   * sent without it: the server's wording, pinned open for a 4xx, nothing for a 401 (the auth
+   * handler owns that) or while errors are muted.
+   */
+  private reportSaveFailure(err: ApiError): void {
+    this.actionFailureToast(err);
   }
 }

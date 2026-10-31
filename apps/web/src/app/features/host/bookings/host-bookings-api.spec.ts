@@ -766,6 +766,51 @@ describe('HostBookingsApi — per-call request options', () => {
       expect(call.params).toMatchObject({ page: 2, limit: 10, 'sort[checkin_date]': 'asc', ...filters });
     });
   });
+
+  describe('calendar and bookingsOn', () => {
+    it('calendar sends the opt-out as the third GET argument when asked', () => {
+      rec.replyWith({ success: true, bookings: [] });
+      api.calendar('MjvuEl', '2026-08-01', '2026-08-31', optOut).subscribe();
+
+      const call = rec.last('get');
+      expect(call.path).toBe('/api/host/hostels/MjvuEl/bookings/booking_calender');
+      expect(call.params).toEqual({ start_date: '2026-08-01', end_date: '2026-08-31' });
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+
+    it('calendar passes no extra argument without options', () => {
+      rec.replyWith({ success: true, bookings: [] });
+      api.calendar('MjvuEl', '2026-08-01', '2026-08-31').subscribe();
+
+      const call = rec.last('get');
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+    });
+
+    it('bookingsOn sends the opt-out as the third GET argument when asked and keeps its day filter', () => {
+      rec.replyWith({ success: true, bookings: [] });
+      api.bookingsOn('MjvuEl', '2026-08-24', optOut).subscribe();
+
+      const call = rec.last('get');
+      expect(call.path).toBe('/api/host/hostels/MjvuEl/bookings');
+      expect(call.params).toMatchObject({
+        'f[checkin_date][gte]': '2026-08-24',
+        'f[checkin_date][lte]': '2026-08-24',
+      });
+      expect(call.argCount).toBe(3);
+      expect(suppressesErrorToast(call)).toBe(true);
+    });
+
+    it('bookingsOn passes no extra argument without options', () => {
+      rec.replyWith({ success: true, bookings: [] });
+      api.bookingsOn('MjvuEl', '2026-08-24').subscribe();
+
+      const call = rec.last('get');
+      expect(call.argCount).toBe(2);
+      expect(suppressesErrorToast(call)).toBe(false);
+    });
+  });
 });
 
 describe('toHostBooking stay times (Trello #165)', () => {

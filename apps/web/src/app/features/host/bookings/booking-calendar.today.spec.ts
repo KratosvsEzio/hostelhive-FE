@@ -187,7 +187,7 @@ describe('BookingCalendar today', () => {
     const c = setUp(I2, { h1: zone });
 
     expect(c.vm.selected()).toBe(day);
-    expect(c.api.bookingsOn).toHaveBeenCalledWith('h1', day);
+    expect(c.api.bookingsOn).toHaveBeenCalledWith('h1', day, { suppressErrorToast: true });
   });
 
   it('steps a month at a time from the hostel month and lands back on today', () => {
