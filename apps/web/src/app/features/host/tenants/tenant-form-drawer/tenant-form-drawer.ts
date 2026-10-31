@@ -37,8 +37,9 @@ import {
   followToday,
   hostelZone,
 } from '@services';
-import { Tenant } from '@hostelhive/data-access';
+import { ApiError, Tenant } from '@hostelhive/data-access';
 import { NotificationService } from '@core/notification.service';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { PAGE_SIZE } from '@util/pagination';
 import { BILLING_DAY_OPTIONS } from '@util/billing-day';
 import { todayIn, wallClockIn } from '@util/zoned-time';
@@ -63,7 +64,10 @@ import {
   assessAvailability,
   stayWindow,
 } from '../room-availability';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+
+/** For the saves, whose failure {@link TenantFormDrawer} reports itself. */
+const QUIET = { suppressErrorToast: true } as const;
 
 /** The lookup's three states: idle, in flight, answered. */
 interface AvailabilityState {
@@ -106,6 +110,8 @@ export class TenantFormDrawer {
   private readonly store = inject(HostPropertyStore);
   private readonly imageUpload = inject(ImageUploadService);
   private readonly notifications = inject(NotificationService);
+  private readonly actionFailureToast = injectActionFailureToast();
+  private readonly i18n = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -806,8 +812,8 @@ export class TenantFormDrawer {
     const name = f.fullName.trim();
     const editing = f.id;
     const request$ = editing
-      ? this.api.updateRenter(hostelId, editing, toUpdateRenterPayload(f, this.formContext()))
-      : this.api.createRenter(hostelId, toCreateRenterPayload(f, this.formContext()));
+      ? this.api.updateRenter(hostelId, editing, toUpdateRenterPayload(f, this.formContext()), QUIET)
+      : this.api.createRenter(hostelId, toCreateRenterPayload(f, this.formContext()), QUIET);
 
     this.saving.set(true);
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -817,13 +823,24 @@ export class TenantFormDrawer {
         else this.notifications.success('Tenant registered', `${name} has been added.`);
         this.saved.emit(tenant);
       },
-      // No toast here. `errorInterceptor` already raises one for every failed request, with
-      // the server's own wording and — for a 4xx — pinned open, because "Email has already
-      // been taken" is worth reading. Raising a second one stacked two messages saying the
-      // same thing, and the more specific of the two was the one that timed out after six
-      // seconds while the generic one stayed. The interceptor owns the toast; a feature's
-      // job is the inline state, which is what `saving` is.
-      error: () => this.saving.set(false),
+      error: (err: ApiError) => {
+        this.saving.set(false);
+        this.reportSaveFailure(err);
+      },
     });
+  }
+
+  /**
+   * One toast for a failed save. A refusal for the plan or a permission is worded in the user's
+   * language, never the server's English, pinned like any other 4xx.
+   *
+   * Every other failure gets exactly the toast the app-wide notifier gives: the server's own
+   * wording, pinned for a 4xx because "Email has already been taken" is worth reading, and
+   * held back while the app mutes error toasts. The request goes out with the global toast
+   * suppressed, so this is the only one; raising a second used to stack two messages saying
+   * the same thing. A 401 gets none: the sign-out speaks for it.
+   */
+  private reportSaveFailure(err: ApiError): void {
+    this.actionFailureToast(err);
   }
 }

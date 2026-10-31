@@ -64,6 +64,8 @@
           <hh-skeleton class="block h-24 w-full rounded-2xl" />
         }
       </div>
+    } @else if (s.permissionError) {
+      <hh-permission-refused class="mt-5" />
     } @else if (s.error) {
       <hh-error-state
         class="mt-5 block"

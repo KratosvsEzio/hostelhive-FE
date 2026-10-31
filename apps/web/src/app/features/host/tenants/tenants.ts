@@ -40,6 +40,7 @@ import { Tenant } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isPermissionRefusal } from '@core/host-access/host-access';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
 import { TENANTS_TABLE_COLS } from '@app/util/table-configs/tenants-table-cols';
@@ -65,6 +66,9 @@ interface FormRequest {
 }
 
 const TONES = ['sky', 'cream', 'mint'] as const;
+
+/** For the list load, whose failure the page draws in its own error state: the global toast would repeat it. */
+const QUIET = { suppressErrorToast: true } as const;
 
 @Component({
   selector: 'hh-tenants',
@@ -92,6 +96,8 @@ export class Tenants {
   private readonly api = inject(HostOpsApi);
   private readonly store = inject(HostPropertyStore);
   private readonly destroyRef = inject(DestroyRef);
+  /** The status changes and the re-invite go out quiet; this is their one toast. */
+  private readonly actionFailureToast = injectActionFailureToast();
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly refresh = signal(0);
@@ -140,7 +146,7 @@ export class Tenants {
         const filters: Record<string, string> = {};
         if (search.trim()) filters['s[full_name]'] = search.trim();
         if (statusFilter !== 'all') filters['f[status.slug]'] = statusFilter;
-        return this.api.renters(hostelId, page, PAGE_SIZE, filters).pipe(
+        return this.api.renters(hostelId, page, PAGE_SIZE, filters, QUIET).pipe(
           tap(() => this.fetching.set(false)),
           map((res): ViewState => ({
             loading: false, error: false, networkError: false,
@@ -268,9 +274,9 @@ export class Tenants {
     const hostelId = this.store.selected();
     const dispositionId = this.inactiveDispositionId();
     if (!hostelId || !dispositionId) return;
-    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
+    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId }, QUIET)
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (updated) => this.applySaved(updated) });
+      .subscribe({ next: (updated) => this.applySaved(updated), error: (err) => this.actionFailureToast(err) });
   }
 
   protected setActive(t: Tenant): void {
@@ -278,18 +284,18 @@ export class Tenants {
     const hostelId = this.store.selected();
     const dispositionId = this.activeDispositionId();
     if (!hostelId || !dispositionId) return;
-    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId })
+    this.api.patchRenter(hostelId, t.id, { disposition_id: dispositionId }, QUIET)
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (updated) => this.applySaved(updated) });
+      .subscribe({ next: (updated) => this.applySaved(updated), error: (err) => this.actionFailureToast(err) });
   }
 
   protected reinvite(t: Tenant): void {
     this.closeMenu();
     const hostelId = this.store.selected();
     if (!hostelId) return;
-    this.api.inviteTenant(hostelId, t.id)
+    this.api.inviteTenant(hostelId, t.id, QUIET)
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+      .subscribe({ error: (err) => this.actionFailureToast(err) });
   }
 
   /**

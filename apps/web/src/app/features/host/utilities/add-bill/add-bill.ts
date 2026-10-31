@@ -22,6 +22,7 @@ import {
 import { HostOpsApi, HostPropertyStore, followToday, selectedHostelToday } from '@services';
 import { addDays, dayToLocalDate } from '@util/plain-day';
 import {
+  ApiError,
   HostRoom as Room,
   Tenant,
   TenantBillSplit,
@@ -32,8 +33,11 @@ import {
 import { MoneyInput } from '@app/shared/money-input/money-input';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
-import { isPermissionRefusal } from '@core/host-access/host-access';
+import { actionRefusalKey, isPermissionRefusal } from '@core/host-access/host-access';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
+import { SessionStore } from '@core/auth/session-store';
 import { isNetworkError } from '@util/network-error';
+import { PAGE_SIZE } from '@util/pagination';
 import { splitByDays, SplitRow } from '../split';
 import { localDay } from '@util/api-date';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -80,6 +84,8 @@ export class AddBill {
   private readonly store = inject(HostPropertyStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly session = inject(SessionStore);
+  private readonly actionFailureToast = injectActionFailureToast();
 
   private readonly refresh = signal(0);
 
@@ -97,7 +103,8 @@ export class AddBill {
   protected readonly today = selectedHostelToday();
   protected readonly dueDateInput = signal<string | null>(addDays(this.today(), DUE_IN_DAYS));
   protected readonly submitting = signal(false);
-  protected readonly submitError = signal(false);
+  /** The translation key of why the last save failed, shown above the save button; null when it did not. */
+  protected readonly submitError = signal<string | null>(null);
 
   protected readonly billId = signal<string | null>(null);
   protected readonly isEdit = computed(() => !!this.billId());
@@ -105,6 +112,8 @@ export class AddBill {
   private readonly stored = signal<{ total: number; splits: TenantBillSplit[] } | null>(null);
   protected readonly editLoading = signal(false);
   protected readonly editError = signal(false);
+  /** The bill being edited was refused for a permission the user lacks, so the page says that instead of the form. */
+  protected readonly editPermissionError = signal(false);
 
   protected readonly monthOptions = computed<DropdownOption[]>(() => {
     const t = dayToLocalDate(this.today());
@@ -132,10 +141,12 @@ export class AddBill {
             types: [],
           });
         }
+        // The page draws its own error state, so the interceptor's toast would be a second message.
+        const quiet = { suppressErrorToast: true };
         return combineLatest([
-          this.api.rooms(hostelId).pipe(map((res) => res.rooms)),
-          this.api.renters(hostelId).pipe(map((res) => res.renters)),
-          this.api.utilityBillFormOptions(hostelId),
+          this.api.rooms(hostelId, 1, PAGE_SIZE, {}, quiet).pipe(map((res) => res.rooms)),
+          this.api.renters(hostelId, 1, PAGE_SIZE, {}, quiet).pipe(map((res) => res.renters)),
+          this.api.utilityBillFormOptions(hostelId, quiet),
         ]).pipe(
           map(([rooms, tenants, types]): ViewState => ({
             loading: false,
@@ -409,10 +420,12 @@ export class AddBill {
         take(1),
         switchMap((hostelId) => {
           this.editLoading.set(true);
-          return this.api.getUtilityBill(hostelId, bid).pipe(
-            catchError(() => {
+          // Every failure is drawn in place of the form, so the interceptor's toast would be a second message.
+          return this.api.getUtilityBill(hostelId, bid, { suppressErrorToast: true }).pipe(
+            catchError((err: unknown) => {
               this.editLoading.set(false);
               this.editError.set(true);
+              this.editPermissionError.set(isPermissionRefusal(err));
               return EMPTY;
             }),
           );
@@ -452,7 +465,9 @@ export class AddBill {
     if (this.isEdit() && !this.stored()) return;
 
     this.submitting.set(true);
-    this.submitError.set(false);
+    this.submitError.set(null);
+    // Sent without the interceptor's toast: `failSubmit` reports the failure itself.
+    const quiet = { suppressErrorToast: true };
 
     const isElec = this.isElectricity();
     const { year, month } = this.selectedMonth();
@@ -490,10 +505,10 @@ export class AddBill {
             issued_date: issuedDate,
             break_down: { [`${this.type()}_bill`]: row.share },
           })),
-        })
+        }, quiet)
         .subscribe({
           next: () => { this.back(); },
-          error: () => { this.submitting.set(false); this.submitError.set(true); },
+          error: (err: ApiError) => this.failSubmit(err),
         });
       return;
     }
@@ -514,10 +529,23 @@ export class AddBill {
       })),
     };
 
-    this.api.createUtilityBill(hostelId, body).subscribe({
+    this.api.createUtilityBill(hostelId, body, quiet).subscribe({
       next: () => { this.back(); },
-      error: () => { this.submitting.set(false); this.submitError.set(true); },
+      error: (err: ApiError) => this.failSubmit(err),
     });
+  }
+
+  /**
+   * Reports a failed save above the save button. A plan without CRM or a permission the user
+   * lacks says so there, translated and worded for the owner or staff, and nothing else. Any
+   * other failure keeps the generic line and the toast `errorInterceptor` would have raised: the
+   * server's wording, pinned open for a 4xx, nothing for a 401 or while errors are muted.
+   */
+  private failSubmit(err: ApiError): void {
+    this.submitting.set(false);
+    const key = actionRefusalKey(err, { owner: this.session.hasRole('host') });
+    this.submitError.set(key ?? 'hostUtilities.failedToSaveTheBill');
+    if (!key) this.actionFailureToast(err);
   }
 
   protected back(): void {

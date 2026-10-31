@@ -749,3 +749,34 @@ describe('a 403 as the error interceptor delivers it', () => {
     });
   });
 });
+
+describe.each(CLASSIFIERS)('$name when the server answers 400 for a hostel with no live plan', ({ fn, fallback }) => {
+  const SUBSCRIBE = 'You need to subscribe to avail the services';
+
+  it.each<{ why: string; opts: MoveFailureOptions | undefined; key: string }>([
+    { why: 'no options are given', opts: undefined, key: 'hostAccess.offlineStaff' },
+    { why: 'the owner flag is off', opts: { owner: false }, key: 'hostAccess.offlineStaff' },
+    { why: 'the owner flag is on', opts: OWNER, key: 'hostAccess.offline' },
+  ])('names the plan for the right audience when $why', ({ opts, key }) => {
+    expect(fn(apiError(400, [SUBSCRIBE]), opts)).toBe(key);
+  });
+
+  it('reads any other 400 as it always did', () => {
+    expect(fn(apiError(400, ['Something else is wrong']), OWNER)).toBe(fallback);
+  });
+
+  it('never reads the message', () => {
+    expect(fn({ status: 400, message: SUBSCRIBE }, OWNER)).toBe(fallback);
+  });
+
+  it('lets the permission refusal win over the plan one', () => {
+    expect(fn(apiError(403, [CANCAN]), OWNER)).toBe('hostBookings.notAllowedOwner');
+  });
+
+  it('lets a plan without CRM win over the plan being inactive', () => {
+    const err = apiError(403, [CRM_REQUIRED_MESSAGE]);
+    expect(fn({ ...err, code: CRM_REQUIRED_CODE, serverMessages: [CRM_REQUIRED_MESSAGE, SUBSCRIBE] }, OWNER)).toBe(
+      PLAN_HAS_NO_CRM,
+    );
+  });
+});

@@ -1,5 +1,10 @@
 import { errorStatus } from '@core/errors/api-error-text';
-import { isCrmRequired, isPermissionRefusal } from '@core/host-access/host-access';
+import {
+  RefusalAudience,
+  actionRefusalKey,
+  isPlanInactive,
+  planInactiveKey,
+} from '@core/host-access/host-access';
 import { bookingRefusal } from '@util/booking-refusal';
 import { LaneKey, laneKeyFor } from './booking-month';
 import { HostBooking } from './host-bookings-api';
@@ -11,14 +16,8 @@ import { HostBooking } from './host-bookings-api';
  */
 export type MovedOnKind = 'done' | 'movedOn';
 
-/** Who a refused move's message is worded for. */
-export interface MoveFailureOptions {
-  /**
-   * The signed-in user holds the owner's `host` role, so a permission their account lacks is for
-   * HostelHive support to grant. Otherwise staff, who are told to ask the owner. Staff by default.
-   */
-  owner?: boolean;
-}
+/** Who a refused move's message is worded for: the audience every host refusal is worded for. */
+export type MoveFailureOptions = RefusalAudience;
 
 /**
  * The translation key for a stay move the server refused: confirm, check in, check out,
@@ -26,16 +25,18 @@ export interface MoveFailureOptions {
  *
  * Every key is a whole sentence, so it reads on its own in a dialog or footer and as the
  * reason in a "one side succeeded" toast. A 403 says the hostel's plan lacks CRM, or that the
- * signed-in user may not make the move, worded for the owner or staff by `opts.owner`; one
- * carrying any other code of the server's is not told apart. Anything not recognised falls back
- * to the generic message. `message` is never read.
+ * signed-in user may not make the move ({@link actionRefusalKey}); one carrying any other code of
+ * the server's is not told apart. A 400 saying the hostel has no live plan says so
+ * ({@link planInactiveKey}). Both are worded for the owner or staff by `opts.owner`. Anything not
+ * recognised falls back to the generic message. `message` is never read.
  */
 export function bookingMoveFailureKey(err: unknown, opts: MoveFailureOptions = {}): string {
   const status = errorStatus(err);
   if (status === 0) return 'common.cannotReachTheServer';
   if (status === 404) return 'hostBookings.bookingNotFound';
-  const forbidden = forbiddenKey(err, opts);
-  if (forbidden) return forbidden;
+  const refused = actionRefusalKey(err, opts);
+  if (refused) return refused;
+  if (isPlanInactive(err)) return planInactiveKey(opts);
 
   switch (bookingRefusal(err)) {
     case 'bookingsClosed':
@@ -116,14 +117,15 @@ export function refusalBorneOut(err: unknown, shown: HostBooking, fresh: HostBoo
 }
 
 /**
- * The translation key for a room that could not be released. A 403 reads as it does for any
- * stay move ({@link bookingMoveFailureKey}). The generic key takes the room number as
- * `{{room}}`. `message` is never read.
+ * The translation key for a room that could not be released. A 403 and a hostel with no live
+ * plan read as they do for any stay move ({@link bookingMoveFailureKey}). The generic key takes
+ * the room number as `{{room}}`. `message` is never read.
  */
 export function releaseFailureKey(err: unknown, opts: MoveFailureOptions = {}): string {
   if (errorStatus(err) === 0) return 'common.cannotReachTheServer';
-  const forbidden = forbiddenKey(err, opts);
-  if (forbidden) return forbidden;
+  const refused = actionRefusalKey(err, opts);
+  if (refused) return refused;
+  if (isPlanInactive(err)) return planInactiveKey(opts);
   return bookingRefusal(err) === 'roomAlreadyReleased'
     ? 'hostBookings.roomAlreadyReleased'
     : 'hostBookings.couldNotReleaseRoom';
@@ -132,25 +134,14 @@ export function releaseFailureKey(err: unknown, opts: MoveFailureOptions = {}): 
 /**
  * The translation key for why a booking's invoice was not marked paid after the booking was.
  * The invoice endpoint sends no refusal of its own worth telling apart, so beyond an
- * unreachable server, a missing invoice or a 403 read as it is for any stay move
- * ({@link bookingMoveFailureKey}), the host is pointed at the invoice itself.
+ * unreachable server, a missing invoice, a 403 or a hostel with no live plan, each read as it is
+ * for any stay move ({@link bookingMoveFailureKey}), the host is pointed at the invoice itself.
  */
 export function crossPayInvoiceFailureKey(err: unknown, opts: MoveFailureOptions = {}): string {
   const status = errorStatus(err);
   if (status === 0) return 'common.cannotReachTheServer';
   if (status === 404) return 'hostBookings.invoiceNoLongerExists';
-  return forbiddenKey(err, opts) ?? 'hostBookings.payTheInvoiceOnItsOwn';
-}
-
-/**
- * The key for a 403 worth telling the host about, or `null` to leave the caller's own reading.
- *
- * A plan without CRM has its own key. A 403 carrying no code of the server's is a permission the
- * signed-in user's role lacks ({@link isPermissionRefusal}), worded for the owner or for staff.
- * Any other coded 403, such as the rate limiter's `forbidden`, and every other status give `null`.
- */
-function forbiddenKey(err: unknown, opts: MoveFailureOptions): string | null {
-  if (isCrmRequired(err)) return 'hostBookings.planHasNoCrm';
-  if (!isPermissionRefusal(err)) return null;
-  return opts.owner ? 'hostBookings.notAllowedOwner' : 'hostBookings.notAllowed';
+  const refused = actionRefusalKey(err, opts);
+  if (refused) return refused;
+  return isPlanInactive(err) ? planInactiveKey(opts) : 'hostBookings.payTheInvoiceOnItsOwn';
 }

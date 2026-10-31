@@ -141,3 +141,37 @@ describe('Overview when only one chart is refused', () => {
     expect(loadSurface(el).text).toContain('common.chartDataIsCurrently');
   });
 });
+
+describe('Overview reads whose failure the page draws itself', () => {
+  const QUIET = { suppressErrorToast: true };
+
+  it('asks for the cards, both charts and the upcoming strip with the global error toast off', async () => {
+    const cards = vi.fn(() => of({ kpis: KPIS }));
+    const revenue = vi.fn(() => NEVER);
+    const movement = vi.fn(() => NEVER);
+    const calendar = vi.fn(() => of({ days: [] }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideI18nTesting(),
+        {
+          provide: HostPropertyStore,
+          useValue: { selected: signal(HOSTEL_ID), isMonthlyBilled: () => false, timeZoneOf: () => of(null) },
+        },
+        { provide: HostBookingsApi, useValue: { calendar } },
+        { provide: HostOpsApi, useValue: { invoices: () => of(invoicesReply()) } },
+        { provide: OverviewApi, useValue: { overviewCards: cards, monthlyRevenue: revenue, tenantMovement: movement } },
+      ],
+    });
+    TestBed.inject(SessionStore).setSession(sessionUser('host'), 'tok');
+
+    const fixture = TestBed.createComponent(HostOverview);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(cards).toHaveBeenCalledWith(HOSTEL_ID, QUIET);
+    expect(revenue).toHaveBeenCalledWith(HOSTEL_ID, undefined, undefined, QUIET);
+    expect(movement).toHaveBeenCalledWith(HOSTEL_ID, undefined, undefined, QUIET);
+    expect(calendar).toHaveBeenCalledWith(HOSTEL_ID, expect.any(String), expect.any(String), QUIET);
+  });
+});

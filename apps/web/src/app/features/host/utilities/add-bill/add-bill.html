@@ -11,7 +11,7 @@
         radius="lg"
       />
     </div>
-  } @else if (s.permissionError) {
+  } @else if (s.permissionError || editPermissionError()) {
     <hh-permission-refused />
   } @else if (s.error || editError()) {
     <hh-error-state [networkError]="s.networkError" (retry)="retry()" />
@@ -209,9 +209,9 @@
           }
         </div>
 
-        @if (submitError()) {
+        @if (submitError(); as errorKey) {
           <p class="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-xs text-danger">
-            {{ 'hostUtilities.failedToSaveTheBill' | transloco }}
+            {{ errorKey | transloco }}
           </p>
         }
         <div class="flex items-center justify-end gap-3">

@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { API_CONFIG } from '@core/api-config';
 import { SessionStore, SessionUser } from '@core/auth/session-store';
@@ -11,6 +11,8 @@ import { provideI18nTesting } from '@core/i18n/provide-i18n-testing';
 import { HostOpsApi, HostPropertyStore } from '@services';
 import { RefusalKind, refusalError } from '@app/testing/backend-refusals';
 import { HOSTEL_ID, sessionUser } from '@app/testing/host-builders';
+import { NotificationSpy } from '@app/testing/host-stubs';
+import { Tenant } from '@hostelhive/data-access';
 import { LIST_LOAD_REFUSALS, PLAN_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
 import { Tenants } from './tenants';
 
@@ -140,5 +142,115 @@ describe('Tenants when the list load is refused', () => {
       expect(buttons).toHaveLength(1);
       expect(buttons[0].disabled).toBe(false);
     });
+  });
+});
+
+const STATUSES = [
+  { name: 'Active', slug: 'active', count: 1, dispositionId: 11 },
+  { name: 'Inactive', slug: 'inactive', count: 0, dispositionId: 22 },
+];
+
+const QUIET_OPTS = { suppressErrorToast: true };
+
+const TOAST_BY_ROLE = {
+  host: 'hostBookings.notAllowedOwner',
+  manager: 'hostBookings.notAllowed',
+} as const;
+
+/** The members the action specs drive; all `protected`. */
+interface TenantActions {
+  setActive(t: Tenant): void;
+  setInactive(t: Tenant): void;
+  reinvite(t: Tenant): void;
+  state(): { data: Tenant[] | null };
+}
+
+/** A row as the list returns it; only what the status actions and the spec read. */
+const ROW = { id: 'rn-1', name: 'Ali Khan', status: 'active' } as unknown as Tenant;
+
+/** The page with one tenant, signed in as `role`, whose writes (patch and invite) all fail with `kind`. */
+async function openWithFailingActions(kind: RefusalKind, role: PageRole = 'manager') {
+  const fail = () => throwError(() => refusalError(kind, { method: 'PATCH' }));
+  const ops = {
+    renters: vi.fn(() => of({ renters: [ROW], total: 1, statuses: STATUSES })),
+    patchRenter: vi.fn(fail),
+    inviteTenant: vi.fn(fail),
+  };
+  const notifications = new NotificationSpy();
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: API_CONFIG, useValue: { baseUrl: 'https://api.test' } },
+      provideI18nTesting(),
+      { provide: HostPropertyStore, useValue: { selected: signal(HOSTEL_ID) } },
+      { provide: HostOpsApi, useValue: ops },
+      notifications.provider(),
+    ],
+  });
+  TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+
+  const fixture = TestBed.createComponent(Tenants);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  const page = fixture.componentInstance as unknown as TenantActions;
+  return { ops, notifications, page };
+}
+
+describe('Tenants status actions and re-invite when refused', () => {
+  describe.each(ROLES)('for the %s', (role) => {
+    it.each(kindsShowing('permission'))('a %s refusal on set active raises one pinned translated toast and leaves the row', async (kind) => {
+      const { ops, notifications, page } = await openWithFailingActions(kind, role);
+
+      page.setActive(ROW);
+
+      expect(ops.patchRenter).toHaveBeenCalledWith(HOSTEL_ID, 'rn-1', { disposition_id: 11 }, QUIET_OPTS);
+      expect(notifications.raised).toEqual([{ kind: 'error', title: TOAST_BY_ROLE[role], ttlMs: 0 }]);
+      expect(notifications.apiErrors).toEqual([]);
+      expect(page.state().data).toEqual([ROW]);
+    });
+
+    it.each(kindsShowing('permission'))('a %s refusal on set inactive raises one pinned translated toast and leaves the row', async (kind) => {
+      const { ops, notifications, page } = await openWithFailingActions(kind, role);
+
+      page.setInactive(ROW);
+
+      expect(ops.patchRenter).toHaveBeenCalledWith(HOSTEL_ID, 'rn-1', { disposition_id: 22 }, QUIET_OPTS);
+      expect(notifications.raised).toEqual([{ kind: 'error', title: TOAST_BY_ROLE[role], ttlMs: 0 }]);
+      expect(notifications.apiErrors).toEqual([]);
+      expect(page.state().data).toEqual([ROW]);
+    });
+  });
+
+  it.each(['crmRequired', 'crmMessageOnly'] as const)('a %s refusal on re-invite says the plan has no CRM, quietly', async (kind) => {
+    const { ops, notifications, page } = await openWithFailingActions(kind);
+
+    page.reinvite(ROW);
+
+    expect(ops.inviteTenant).toHaveBeenCalledWith(HOSTEL_ID, 'rn-1', QUIET_OPTS);
+    expect(notifications.raised).toEqual([{ kind: 'error', title: 'hostBookings.planHasNoCrm', ttlMs: 0 }]);
+    expect(notifications.apiErrors).toEqual([]);
+  });
+
+  it('hands a failed re-invite that is not a refusal to the app notifier once', async () => {
+    const { notifications, page } = await openWithFailingActions('serverError');
+
+    page.reinvite(ROW);
+
+    expect(notifications.apiErrors).toHaveLength(1);
+    expect(notifications.apiErrors[0].status).toBe(500);
+    expect(notifications.raised).toEqual([]);
+  });
+});
+
+describe('Tenants list read', () => {
+  it('goes out without the global error toast, because the page draws its own error state', async () => {
+    const { ops } = await openWithFailingActions('serverError');
+
+    const call = ops.renters.mock.calls[0] as unknown as unknown[];
+    expect(call[0]).toBe(HOSTEL_ID);
+    expect(call.at(-1)).toEqual(QUIET_OPTS);
   });
 });

@@ -30,6 +30,9 @@ import { Invoices } from './invoices';
 
 vi.mock('@util/csv', () => ({ downloadCsv: vi.fn() }));
 
+/** The opt-out a page sends on a request whose failure it reports itself. */
+const QUIET = { suppressErrorToast: true };
+
 const LIST = `/host/${HOSTEL_ID}/invoices`;
 const viewUrl = (billId: string): string => `${LIST}/view/${billId}`;
 
@@ -507,7 +510,7 @@ describe('Invoices page', () => {
       await startPay(page, 0);
 
       expect(dialog(page)).toBeNull();
-      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2');
+      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2', QUIET);
       expect(deps.bookings.get).not.toHaveBeenCalled();
       expect(norm(bodyRows(page)[0])).toContain('Paid');
       expect(figures(page)).toEqual(['Rs 15,000', 'Rs 15,000', 'Rs 0', 'Rs 3,600', 'Rs 0', 'Rs 3,600']);
@@ -606,7 +609,7 @@ describe('Invoices page', () => {
 
       await click(page, confirmButton(page));
 
-      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-1');
+      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-1', QUIET);
       expect(deps.bookings.markPaid).not.toHaveBeenCalled();
 
       invoiceReply.next(bookingInvoice({ status: 'paid' }));
@@ -763,7 +766,7 @@ describe('Invoices page', () => {
       expect(shown).not.toContain('http://');
     });
 
-    it('sends no booking request, shows an error and closes the prompt when the invoice fails', async () => {
+    it('sends no booking request, reports the failure once and closes the prompt when the invoice fails', async () => {
       const failure = apiError(422, ['Already settled.']);
       const deps = depsWith(invoicesReply(dueBookingBills()));
       deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
@@ -774,8 +777,9 @@ describe('Invoices page', () => {
       await click(page, confirmButton(page));
 
       expect(deps.bookings.markPaid).not.toHaveBeenCalled();
-      const copy = toToastCopy(failure);
-      expect(deps.notifications.raised).toEqual([{ kind: 'error', title: copy.title, message: copy.message, ttlMs: 0 }]);
+      // The request is quiet, so the app-wide notifier is handed the one failure and the page raises nothing itself.
+      expect(deps.notifications.apiErrors).toEqual([failure]);
+      expect(deps.notifications.raised).toEqual([]);
       expect(dialog(page)).toBeNull();
       expect(norm(bodyRows(page)[0])).not.toContain('Paid');
     });
@@ -928,7 +932,7 @@ describe('Invoices page', () => {
 
       await startPay(page, 0);
 
-      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2');
+      expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2', QUIET);
       expect(norm(bodyRows(page)[0])).toContain('Paid');
       expect(internals(page).selected()).toMatchObject({ id: 'rb-2', status: 'paid' });
       expect(preview(page)).not.toBeNull();
@@ -945,7 +949,7 @@ describe('Invoices page', () => {
       await pickMenuItem(page, 'common.delete');
       await click(page, buttonIn(dialog(page), 'Delete'));
 
-      expect(deps.ops.deleteInvoice).toHaveBeenCalledWith(HOSTEL_ID, 'rb-1');
+      expect(deps.ops.deleteInvoice).toHaveBeenCalledWith(HOSTEL_ID, 'rb-1', QUIET);
       expect(preview(page)).toBeNull();
     });
   });
@@ -1197,6 +1201,185 @@ describe('Invoices page', () => {
         expect(shown.heading).toBe('states.cantConnect');
         expect(shown.retry).toBe(true);
         expect(shown.text).not.toContain('hostAccess.pageNotAllowed');
+      });
+    });
+  });
+
+  describe('when a bill action is refused', () => {
+    const DELETE_URL = `https://api.test/api/host/hostels/${HOSTEL_ID}/renter_bills/rb-2`;
+    const PAY_URL = `${DELETE_URL}/mark_as_paid`;
+    const BILLS_URL = `https://api.test/api/host/hostels/${HOSTEL_ID}/renter_bills`;
+    const STAFF_AND_OWNER = [
+      { role: 'manager', key: 'hostBookings.notAllowed' },
+      { role: 'host', key: 'hostBookings.notAllowedOwner' },
+    ] as const satisfies readonly { role: Role; key: string }[];
+    const PAGE_SENTENCES = [
+      { role: 'manager', key: 'hostAccess.pageNotAllowed' },
+      { role: 'host', key: 'hostAccess.pageNotAllowedOwner' },
+    ] as const satisfies readonly { role: Role; key: string }[];
+    const PERMISSION_KINDS = ['permissionCanCan', 'permissionRender403'] as const;
+    const actionCases = STAFF_AND_OWNER.flatMap((c) => PERMISSION_KINDS.map((kind) => ({ ...c, kind })));
+
+    // A signed-in host persists its hostel choice; the session persists itself. Neither may reach the next test.
+    afterEach(() => {
+      TestBed.inject(HostPropertyStore).clear();
+      TestBed.inject(SessionStore).clear();
+    });
+
+    const pinned = (title: string) => ({ kind: 'error', title, message: undefined, ttlMs: 0 });
+
+    /** A monthly page with one due rent bill whose "Mark as paid" the server answers with `failure`. */
+    async function payRentBill(failure: ApiError, role?: Role) {
+      const deps = depsWith(invoicesReply([invoice()], { aggs: RENT_AGGS }));
+      deps.ops.markInvoicePaid.mockReturnValue(throwError(() => failure));
+      const page = await open({ billing: 'month', deps, signedInAs: role });
+      await startPay(page, 0);
+      return { page, deps };
+    }
+
+    /** A monthly page with one rent bill whose delete the server answers with `failure`, deleted through the confirm. */
+    async function deleteRentBill(failure: ApiError, role?: Role) {
+      const deps = depsWith(invoicesReply([invoice()], { aggs: RENT_AGGS }));
+      deps.ops.deleteInvoice.mockReturnValue(throwError(() => failure));
+      const page = await open({ billing: 'month', deps, signedInAs: role });
+      await openRowMenu(page, 0);
+      await pickMenuItem(page, 'common.delete');
+      await click(page, buttonIn(dialog(page), 'Delete'));
+      return { page, deps };
+    }
+
+    describe('on Mark paid for a rent or utility bill', () => {
+      it.each(actionCases)('tells a $role account once that it lacks permission, after a $kind refusal, and leaves the bill unpaid', async ({ role, key, kind }) => {
+        const { page, deps } = await payRentBill(refusalError(kind, { method: 'PUT', url: PAY_URL }), role);
+
+        expect(deps.notifications.raised).toEqual([pinned(key)]);
+        expect(deps.notifications.apiErrors).toEqual([]);
+        expect(norm(bodyRows(page)[0])).not.toContain('Paid');
+        expect(deps.ops.markInvoicePaid).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2', QUIET);
+      });
+
+      it.each<RefusalKind>(['crmRequired', 'crmMessageOnly'])('says the plan has no CRM after a %s refusal', async (kind) => {
+        const { page, deps } = await payRentBill(refusalError(kind, { method: 'PUT', url: PAY_URL }));
+
+        expect(deps.notifications.raised).toEqual([pinned('hostBookings.planHasNoCrm')]);
+        expect(deps.notifications.apiErrors).toEqual([]);
+        expect(norm(bodyRows(page)[0])).not.toContain('Paid');
+      });
+
+      it('hands any other failure to the app-wide notifier once and raises no toast of its own', async () => {
+        const failure = refusalError('unprocessable', { method: 'PUT', url: PAY_URL });
+        const { deps } = await payRentBill(failure);
+
+        expect(deps.notifications.apiErrors).toEqual([failure]);
+        expect(deps.notifications.raised).toEqual([]);
+      });
+    });
+
+    describe('on the pay prompt of a booking bill', () => {
+      it.each(actionCases)('shows one toast to a $role account, closes the prompt and sends no booking request, after the invoice step gets a $kind refusal', async ({ role, key, kind }) => {
+        const deps = depsWith(invoicesReply(dueBookingBills()));
+        deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
+        deps.ops.markInvoicePaid.mockReturnValue(throwError(() => refusalError(kind, { method: 'PUT', url: PAY_URL })));
+        const page = await open({ deps, signedInAs: role });
+        await startPay(page);
+
+        await click(page, confirmButton(page));
+
+        expect(deps.notifications.raised).toEqual([pinned(key)]);
+        expect(deps.notifications.apiErrors).toEqual([]);
+        expect(deps.bookings.markPaid).not.toHaveBeenCalled();
+        expect(dialog(page)).toBeNull();
+        expect(internals(page).paying()).toBe(false);
+        expect(norm(bodyRows(page)[0])).not.toContain('Paid');
+      });
+
+      it.each([
+        { role: 'manager', reason: 'hostAccess.offlineStaff' },
+        { role: 'host', reason: 'hostAccess.offline' },
+      ] as const satisfies readonly { role: Role; reason: string }[])(
+        'gives a $role account the reason $reason when the booking step finds the hostel with no live plan',
+        async ({ role, reason }) => {
+          const deps = depsWith(invoicesReply(dueBookingBills()));
+          deps.bookings.get.mockReturnValue(of(hostBooking('checked-in')));
+          deps.ops.markInvoicePaid.mockReturnValue(of(bookingInvoice({ status: 'paid' })));
+          deps.bookings.markPaid.mockReturnValue(throwError(() => refusalError('inactive', { method: 'PUT' })));
+          const page = await open({ deps, signedInAs: role });
+          const translate = vi.spyOn(TestBed.inject(TranslocoService), 'translate');
+          await startPay(page);
+
+          await click(page, confirmButton(page));
+
+          expect(deps.notifications.raised).toEqual([pinned('hostInvoices.bookingNotPaid')]);
+          expect(translate.mock.calls.filter((c) => c[0] === 'hostInvoices.bookingNotPaid').map((c) => c[1])).toEqual([{ reason }]);
+          expect(norm(bodyRows(page)[0])).toContain('Paid');
+        },
+      );
+    });
+
+    describe('on delete', () => {
+      it.each(actionCases)('tells a $role account once that it lacks permission, after a $kind refusal, and puts the row back', async ({ role, key, kind }) => {
+        const { page, deps } = await deleteRentBill(refusalError(kind, { method: 'DELETE', url: DELETE_URL }), role);
+
+        expect(deps.notifications.raised).toEqual([pinned(key)]);
+        expect(deps.notifications.apiErrors).toEqual([]);
+        expect(deps.ops.deleteInvoice).toHaveBeenCalledWith(HOSTEL_ID, 'rb-2', QUIET);
+        expect(bodyRows(page)).toHaveLength(1);
+        expect(norm(bodyRows(page)[0])).toContain('Due');
+      });
+
+      it('says the plan has no CRM', async () => {
+        const { deps } = await deleteRentBill(refusalError('crmRequired', { method: 'DELETE', url: DELETE_URL }));
+
+        expect(deps.notifications.raised).toEqual([pinned('hostBookings.planHasNoCrm')]);
+        expect(deps.notifications.apiErrors).toEqual([]);
+      });
+
+      it('hands a server error to the app-wide notifier once, raises no toast of its own and puts the row back', async () => {
+        const failure = refusalError('serverError', { method: 'DELETE', url: DELETE_URL });
+        const { page, deps } = await deleteRentBill(failure);
+
+        expect(deps.notifications.apiErrors).toEqual([failure]);
+        expect(deps.notifications.raised).toEqual([]);
+        expect(bodyRows(page)).toHaveLength(1);
+      });
+    });
+
+    describe('on opening a bill by its link', () => {
+      it.each(PAGE_SENTENCES.flatMap((c) => PERMISSION_KINDS.map((kind) => ({ ...c, kind }))))(
+        'tells a $role account once that it may not see this, with no server text, after a $kind refusal',
+        async ({ role, key, kind }) => {
+          const deps = depsWith(invoicesReply([bookingInvoice()]));
+          deps.ops.invoice.mockReturnValue(throwError(() => refusalError(kind, { url: `${BILLS_URL}/rb-9` })));
+          const page = await open({ url: viewUrl('rb-9'), deps, signedInAs: role });
+          await flush(page);
+
+          expect(deps.notifications.raised).toHaveLength(1);
+          expect(deps.notifications.raised[0]).toMatchObject({ kind: 'error', title: key, message: undefined });
+          expect(deps.notifications.raised[0].title).not.toContain(CANCAN_MESSAGE);
+          expect(page.url()).toBe(LIST);
+          expect(preview(page)).toBeNull();
+        },
+      );
+
+      it('says the plan has no CRM', async () => {
+        const deps = depsWith(invoicesReply([bookingInvoice()]));
+        deps.ops.invoice.mockReturnValue(throwError(() => refusalError('crmRequired', { url: `${BILLS_URL}/rb-9` })));
+        const page = await open({ url: viewUrl('rb-9'), deps });
+        await flush(page);
+
+        expect(deps.notifications.raised).toHaveLength(1);
+        expect(deps.notifications.raised[0]).toMatchObject({ kind: 'error', title: 'hostBookings.planHasNoCrm', message: undefined });
+        expect(page.url()).toBe(LIST);
+      });
+    });
+
+    describe('on the list read', () => {
+      it('is sent without the interceptor toast, since the page draws its own error state', async () => {
+        const deps = depsWith(invoicesReply());
+        await open({ deps });
+
+        expect(deps.ops.invoices).toHaveBeenCalled();
+        expect(deps.ops.invoices.mock.calls.every((c) => c[4]?.suppressErrorToast === true)).toBe(true);
       });
     });
   });

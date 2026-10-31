@@ -16,6 +16,8 @@ import { Button, Skeleton } from '@hostelhive/ui';
 import { hostelZone } from '@services';
 import { todayIn } from '@util/zoned-time';
 import { LocaleStore } from '@core/i18n/locale-store';
+import { isPermissionRefusal } from '@core/host-access/host-access';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { guestsPhrase, nightsPhrase } from './booking-copy';
 import {
   BookingCalendar as CalendarData,
@@ -36,6 +38,8 @@ import {
 interface CalendarState {
   loading: boolean;
   error: boolean;
+  /** The month was refused for a permission the signed-in user's role lacks. */
+  permissionError?: boolean;
   data: CalendarData;
 }
 
@@ -43,10 +47,14 @@ interface CalendarState {
 interface DayState {
   loading: boolean;
   error: boolean;
+  /** The day was refused for a permission the signed-in user's role lacks. */
+  permissionError?: boolean;
   data: readonly HostBooking[];
 }
 
 const EMPTY: CalendarData = { days: [], totals: {}, revenue: {} };
+/** For the month and day reads, whose failure the calendar draws itself: the global toast would repeat it. */
+const QUIET = { suppressErrorToast: true } as const;
 
 /**
  * The month above the bookings table — every room, every state, one screen.
@@ -66,7 +74,7 @@ const EMPTY: CalendarData = { days: [], totals: {}, revenue: {} };
 @Component({
   selector: 'hh-booking-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Button, Skeleton, TranslocoPipe],
+  imports: [DatePipe, Button, Skeleton, PermissionRefused, TranslocoPipe],
   templateUrl: './booking-calendar.html',
 })
 export class BookingCalendar {
@@ -185,11 +193,13 @@ export class BookingCalendar {
           ? of<CalendarState>({ loading: true, error: false, data: EMPTY })
           : !hostelId
           ? of<CalendarState>({ loading: false, error: false, data: EMPTY })
-          : this.api.calendar(hostelId, start, end).pipe(
+          : this.api.calendar(hostelId, start, end, QUIET).pipe(
               // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
               switchMap((data) => of<CalendarState>({ loading: false, error: false, data })),
               startWith<CalendarState>({ loading: true, error: false, data: EMPTY }),
-              catchError(() => of<CalendarState>({ loading: false, error: true, data: EMPTY })),
+              catchError((err: unknown) =>
+                of<CalendarState>({ loading: false, error: true, permissionError: isPermissionRefusal(err), data: EMPTY }),
+              ),
             ),
       ),
     ),
@@ -258,10 +268,12 @@ export class BookingCalendar {
           ? of<DayState>({ loading: true, error: false, data: [] })
           : !hostelId || !date
           ? of<DayState>({ loading: false, error: false, data: [] })
-          : this.api.bookingsOn(hostelId, date).pipe(
+          : this.api.bookingsOn(hostelId, date, QUIET).pipe(
               map((data): DayState => ({ loading: false, error: false, data })),
               startWith<DayState>({ loading: true, error: false, data: [] }),
-              catchError(() => of<DayState>({ loading: false, error: true, data: [] })),
+              catchError((err: unknown) =>
+                of<DayState>({ loading: false, error: true, permissionError: isPermissionRefusal(err), data: [] }),
+              ),
             ),
       ),
     ),

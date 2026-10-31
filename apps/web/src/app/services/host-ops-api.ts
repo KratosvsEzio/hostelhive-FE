@@ -562,9 +562,14 @@ export class HostOpsApi {
     page = 1,
     limit = PAGE_SIZE,
     filters: Record<string, string> = {},
+    opts?: ApiRequestOptions,
   ): Observable<{ rooms: Room[]; total: number; aggs: RoomAggs; statuses: RoomStatusOption[] }> {
     return this.api
-      .get<ApiRoomsResponse>(`/api/host/hostels/${hostelId}/rooms`, { ...pageParams(page, limit), ...filters })
+      .get<ApiRoomsResponse>(
+        `/api/host/hostels/${hostelId}/rooms`,
+        { ...pageParams(page, limit), ...filters },
+        ...requestContextArgs(opts),
+      )
       .pipe(map((res) => ({
         rooms: (res.rooms ?? res.data ?? []).map(toRoom),
         total: res.pagination?.total_count ?? res.total_count ?? 0,
@@ -625,12 +630,12 @@ export class HostOpsApi {
       .pipe(map((r) => toRoom(r?.room ?? ({} as ApiRoom))));
   }
 
-  deleteRoom(hostelId: string, roomId: string): Observable<unknown> {
-    return this.api.delete(`/api/host/hostels/${hostelId}/rooms/${roomId}`);
+  deleteRoom(hostelId: string, roomId: string, opts?: ApiRequestOptions): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/rooms/${roomId}`, undefined, ...requestContextArgs(opts));
   }
 
-  roomDetail(hostelId: string, roomId: string): Observable<RoomRenter[]> {
-    return this.roomShow(hostelId, roomId).pipe(map((d) => d.renters));
+  roomDetail(hostelId: string, roomId: string, opts?: ApiRequestOptions): Observable<RoomRenter[]> {
+    return this.roomShow(hostelId, roomId, opts).pipe(map((d) => d.renters));
   }
 
   roomShow(hostelId: string, roomId: string, opts?: ApiRequestOptions): Observable<RoomShowData> {
@@ -686,10 +691,12 @@ export class HostOpsApi {
       .pipe(map((r) => (r?.hostel?.rooms ?? []).map(toRoom)));
   }
 
-  roomFormOptions(hostelId: string): Observable<RoomTypeOption[]> {
+  roomFormOptions(hostelId: string, opts?: ApiRequestOptions): Observable<RoomTypeOption[]> {
     return this.api
       .get<{ hostel?: { room_types?: ApiRoomType[] }; room_types?: ApiRoomType[] }>(
         `/api/host/hostels/${hostelId}`,
+        undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(
         map((res) => {
@@ -712,9 +719,14 @@ export class HostOpsApi {
     page = 1,
     limit = PAGE_SIZE,
     filters: Record<string, string> = {},
+    opts?: ApiRequestOptions,
   ): Observable<{ renters: Tenant[]; total: number; statuses: { name: string; slug: string; count: number; dispositionId: number }[] }> {
     return this.api
-      .get<ApiRentersResponse>(`/api/host/hostels/${hostelId}/renters`, { ...pageParams(page, limit), ...filters })
+      .get<ApiRentersResponse>(
+        `/api/host/hostels/${hostelId}/renters`,
+        { ...pageParams(page, limit), ...filters },
+        ...requestContextArgs(opts),
+      )
       .pipe(
         map((res) => {
           const aggsBySlug = Object.fromEntries((res.aggs ?? []).map((a) => [a.slug, a.count]));
@@ -764,9 +776,10 @@ export class HostOpsApi {
       cnic_front_id?: string;
       cnic_back_id?: string;
     },
+    opts?: ApiRequestOptions,
   ): Observable<Tenant> {
     return this.api
-      .post<ApiCreateRenterResponse>(`/api/host/hostels/${hostelId}/renters`, { renter: body })
+      .post<ApiCreateRenterResponse>(`/api/host/hostels/${hostelId}/renters`, { renter: body }, ...requestContextArgs(opts))
       .pipe(map((res) => toTenant(res.renter ?? {})));
   }
 
@@ -797,11 +810,13 @@ export class HostOpsApi {
       cnic_back_id?: string;
       disposition_id?: number;
     },
+    opts?: ApiRequestOptions,
   ): Observable<Tenant> {
     return this.api
       .put<ApiCreateRenterResponse>(
         `/api/host/hostels/${hostelId}/renters/${renterId}`,
         { renter: body },
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => toTenant(res.renter ?? {})));
   }
@@ -810,20 +825,32 @@ export class HostOpsApi {
     hostelId: string,
     renterId: string,
     body: { disposition_id?: number },
+    opts?: ApiRequestOptions,
   ): Observable<Tenant> {
     return this.api
       .patch<ApiCreateRenterResponse>(
         `/api/host/hostels/${hostelId}/renters/${renterId}`,
         { renter: body },
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => toTenant(res.renter ?? {})));
   }
 
-  inviteTenant(hostelId: string, renterId: string): Observable<unknown> {
-    return this.api.post(`/api/host/hostels/${hostelId}/renters/${renterId}/invite_tenant`, {});
+  inviteTenant(hostelId: string, renterId: string, opts?: ApiRequestOptions): Observable<unknown> {
+    return this.api.post(
+      `/api/host/hostels/${hostelId}/renters/${renterId}/invite_tenant`,
+      {},
+      ...requestContextArgs(opts),
+    );
   }
 
-  invoices(hostelId: string, page = 1, limit = PAGE_SIZE, filters: Record<string, string | readonly string[]> = {}): Observable<{
+  invoices(
+    hostelId: string,
+    page = 1,
+    limit = PAGE_SIZE,
+    filters: Record<string, string | readonly string[]> = {},
+    opts?: ApiRequestOptions,
+  ): Observable<{
     bills: Invoice[];
     total: number;
     totalPages: number;
@@ -842,7 +869,7 @@ export class HostOpsApi {
   }> {
     const params: Record<string, string | number | boolean | readonly string[]> = { ...pageParams(page, limit), ...filters };
     return this.api
-      .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params)
+      .get<ApiRenterBillsResponse>(`/api/host/hostels/${hostelId}/renter_bills`, params, ...requestContextArgs(opts))
       .pipe(
         map((res) => ({
           bills: (res.renter_bills ?? res.data ?? []).map(toInvoice),
@@ -921,6 +948,7 @@ export class HostOpsApi {
     page = 1,
     limit = PAGE_SIZE,
     filters: Record<string, string> = {},
+    opts?: ApiRequestOptions,
   ): Observable<{
     bills: UtilityBill[];
     total: number;
@@ -929,7 +957,11 @@ export class HostOpsApi {
     aggs: { billToPay: number; received: number; balance: number };
   }> {
     return this.api
-      .get<ApiUtilityBillsResponse>(`/api/host/hostels/${hostelId}/utility_bills`, { ...pageParams(page, limit), ...filters })
+      .get<ApiUtilityBillsResponse>(
+        `/api/host/hostels/${hostelId}/utility_bills`,
+        { ...pageParams(page, limit), ...filters },
+        ...requestContextArgs(opts),
+      )
       .pipe(map((res) => ({
         bills: (res.utility_bills ?? res.data ?? []).map(toUtilityBill),
         total: res.pagination?.total_count ?? 0,
@@ -951,11 +983,13 @@ export class HostOpsApi {
   createInvoice(
     hostelId: string,
     body: InvoiceBody,
+    opts?: ApiRequestOptions,
   ): Observable<Invoice> {
     return this.api
       .post<{ renter_bill?: ApiRenterBillTop }>(
         `/api/host/hostels/${hostelId}/renter_bills`,
         { renter_bill: body },
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
@@ -982,17 +1016,19 @@ export class HostOpsApi {
     hostelId: string,
     billId: string,
     body: InvoiceBody,
+    opts?: ApiRequestOptions,
   ): Observable<Invoice> {
     return this.api
       .put<{ renter_bill?: ApiRenterBillTop }>(
         `/api/host/hostels/${hostelId}/renter_bills/${billId}`,
         { renter_bill: body },
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
-  deleteInvoice(hostelId: string, billId: string): Observable<unknown> {
-    return this.api.delete(`/api/host/hostels/${hostelId}/renter_bills/${billId}`);
+  deleteInvoice(hostelId: string, billId: string, opts?: ApiRequestOptions): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/renter_bills/${billId}`, undefined, ...requestContextArgs(opts));
   }
 
   /**
@@ -1021,18 +1057,20 @@ export class HostOpsApi {
       .pipe(map((res) => toInvoice(res.renter_bill ?? {})));
   }
 
-  deleteRenter(hostelId: string, renterId: string): Observable<unknown> {
-    return this.api.delete(`/api/host/hostels/${hostelId}/renters/${renterId}`);
+  deleteRenter(hostelId: string, renterId: string, opts?: ApiRequestOptions): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/renters/${renterId}`, undefined, ...requestContextArgs(opts));
   }
 
-  deleteUtilityBill(hostelId: string, billId: string): Observable<unknown> {
-    return this.api.delete(`/api/host/hostels/${hostelId}/utility_bills/${billId}`);
+  deleteUtilityBill(hostelId: string, billId: string, opts?: ApiRequestOptions): Observable<unknown> {
+    return this.api.delete(`/api/host/hostels/${hostelId}/utility_bills/${billId}`, undefined, ...requestContextArgs(opts));
   }
 
-  getUtilityBill(hostelId: string, billId: string): Observable<UtilityBill> {
+  getUtilityBill(hostelId: string, billId: string, opts?: ApiRequestOptions): Observable<UtilityBill> {
     return this.api
       .get<Record<string, unknown>>(
         `/api/host/hostels/${hostelId}/utility_bills/${billId}`,
+        undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(
         map((res) => {
@@ -1054,8 +1092,17 @@ export class HostOpsApi {
    * backend decodes them (azeem-hamza/hostelhive#34). This used to call the singular
    * `/api/host/hostel/…`, which has no route, and to send `Number(id)`, which is NaN.
    */
-  updateUtilityBill(hostelId: string, billId: string, body: UtilityBillUpdate): Observable<unknown> {
-    return this.api.put(`/api/host/hostels/${hostelId}/utility_bills/${billId}`, { utility_bill: body });
+  updateUtilityBill(
+    hostelId: string,
+    billId: string,
+    body: UtilityBillUpdate,
+    opts?: ApiRequestOptions,
+  ): Observable<unknown> {
+    return this.api.put(
+      `/api/host/hostels/${hostelId}/utility_bills/${billId}`,
+      { utility_bill: body },
+      ...requestContextArgs(opts),
+    );
   }
 
   /** The current billing batch (utility line items). */
@@ -1066,10 +1113,12 @@ export class HostOpsApi {
   // --- Sync config (not async fetches) -------------------------------------
 
   /** Utility types available for a hostel, merged with local meta (icon/metering/unit). */
-  utilityBillFormOptions(hostelId: string): Observable<UtilityTypeMeta[]> {
+  utilityBillFormOptions(hostelId: string, opts?: ApiRequestOptions): Observable<UtilityTypeMeta[]> {
     return this.api
       .get<{ utility_bill_types?: { id: number; slug: string; name: string }[] }>(
         `/api/host/hostels/${hostelId}/utility_bills/new`,
+        undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(
         map((res) =>
@@ -1103,8 +1152,9 @@ export class HostOpsApi {
         break_down: Record<string, number>;
       }[];
     },
+    opts?: ApiRequestOptions,
   ): Observable<unknown> {
-    return this.api.post(`/api/host/hostels/${hostelId}/utility_bills`, { utility_bill: body });
+    return this.api.post(`/api/host/hostels/${hostelId}/utility_bills`, { utility_bill: body }, ...requestContextArgs(opts));
   }
 
   /** Fallback sync list (used for the table's metaOf() and when hostelId is unknown). */

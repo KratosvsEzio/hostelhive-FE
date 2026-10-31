@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ErrorState } from '@hostelhive/ui';
 import { SessionStore } from '@core/auth/session-store';
+import { pageNotAllowedKey } from '@core/host-access/host-access';
 
 /**
  * What a host page shows in place of its content when the server refused the signed-in user a
@@ -25,6 +26,6 @@ export class PermissionRefused {
   private readonly session = inject(SessionStore);
 
   protected readonly messageKey = computed(() =>
-    this.session.hasRole('host') ? 'hostAccess.pageNotAllowedOwner' : 'hostAccess.pageNotAllowed',
+    pageNotAllowedKey({ owner: this.session.hasRole('host') }),
   );
 }

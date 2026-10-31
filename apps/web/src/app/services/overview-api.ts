@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { EMPTY, Observable, map } from 'rxjs';
 import { Kpi, OverviewData, RevenuePoint, TenantMovement } from '@hostelhive/data-access';
-import { ApiClient } from '@core/api-resource';
+import { ApiClient, ApiRequestOptions, requestContextArgs } from '@core/api-resource';
 
 interface RenterMovementResponse {
   aggs: { month: string; moved_in: number; moved_out: number }[];
@@ -131,7 +131,7 @@ export class OverviewApi {
   private readonly api = inject(ApiClient);
 
   /** The KPI row. Named for its endpoint, which is the only thing it reads. */
-  overviewCards(hostelSlug: string): Observable<OverviewData> {
+  overviewCards(hostelSlug: string, opts?: ApiRequestOptions): Observable<OverviewData> {
     if (!hostelSlug) return EMPTY;
 
     const month = new Date().getMonth();
@@ -139,11 +139,18 @@ export class OverviewApi {
     return this.api
       .get<ApiOverviewCardsResponse>(
         `/api/host/hostels/${hostelSlug}/overview_cards`,
+        undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(map((res) => ({ kpis: toKpis(res, SHORT_MONTHS[month]) })));
   }
 
-  monthlyRevenue(slug: string, startDate?: string, endDate?: string): Observable<RevenuePoint[]> {
+  monthlyRevenue(
+    slug: string,
+    startDate?: string,
+    endDate?: string,
+    opts?: ApiRequestOptions,
+  ): Observable<RevenuePoint[]> {
     const params: Record<string, string> = {};
     if (startDate) params['start_date'] = startDate;
     if (endDate) params['end_date'] = endDate;
@@ -151,6 +158,7 @@ export class OverviewApi {
       .get<MonthlyRevenueResponse>(
         `/api/host/hostels/${slug}/monthly_revenue`,
         Object.keys(params).length ? params : undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(
         map((res) =>
@@ -193,7 +201,12 @@ export class OverviewApi {
       );
   }
 
-  tenantMovement(slug: string, startDate?: string, endDate?: string): Observable<TenantMovement[]> {
+  tenantMovement(
+    slug: string,
+    startDate?: string,
+    endDate?: string,
+    opts?: ApiRequestOptions,
+  ): Observable<TenantMovement[]> {
     const params: Record<string, string> = {};
     if (startDate) params['start_date'] = startDate;
     if (endDate) params['end_date'] = endDate;
@@ -201,6 +214,7 @@ export class OverviewApi {
       .get<RenterMovementResponse>(
         `/api/host/hostels/${slug}/monthly_renter_movement`,
         Object.keys(params).length ? params : undefined,
+        ...requestContextArgs(opts),
       )
       .pipe(
         map((res) =>

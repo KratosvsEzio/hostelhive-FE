@@ -39,10 +39,11 @@ import {
 } from '@hostelhive/ui';
 import { HostOpsApi, HostPropertyStore, selectedHostelToday } from '@services';
 import { dayToLocalDate } from '@util/plain-day';
-import { TenantBillSplit, UtilityBill, UtilityType, UtilityTypeMeta } from '@hostelhive/data-access';
+import { ApiError, TenantBillSplit, UtilityBill, UtilityType, UtilityTypeMeta } from '@hostelhive/data-access';
 import { DashboardLayout } from '@layout/dashboard-layout/dashboard-layout';
 import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { isPermissionRefusal } from '@core/host-access/host-access';
+import { injectActionFailureToast } from '@core/host-access/action-failure';
 import { isNetworkError } from '@util/network-error';
 import { PAGE_SIZE } from '@util/pagination';
 import { dayRangeStart, dayRangeEnd } from '@util/date-range-filter';
@@ -98,6 +99,7 @@ export class Utilities {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly apiBaseUrl = inject(API_CONFIG).baseUrl;
+  private readonly actionFailureToast = injectActionFailureToast();
   private readonly refresh = signal(0);
 
   protected readonly billRowId = (row: unknown) => (row as UtilityBill).id;
@@ -142,7 +144,9 @@ export class Utilities {
         if (!key.hostelId) {
           return of<ViewState>({ loading: false, error: false, networkError: false, bills: [], total: 0 });
         }
-        return this.api.utilityBills(key.hostelId, key.page, PAGE_SIZE, this.listFilters(key)).pipe(
+        // The page draws its own error state, so the interceptor's toast would be a second message.
+        const quiet = { suppressErrorToast: true };
+        return this.api.utilityBills(key.hostelId, key.page, PAGE_SIZE, this.listFilters(key), quiet).pipe(
           map((res): ViewState => ({
             loading: false,
             error: false,
@@ -418,16 +422,28 @@ export class Utilities {
     this.deletedIds.update((s) => { const n = new Set(s); n.add(b.id); return n; });
     this.deletePending.set(null);
     this.deleting.set(true);
-    this.api.deleteUtilityBill(hostelId, b.id).subscribe({
+    // Sent without the interceptor's toast: `reportDeleteFailure` raises the only one.
+    this.api.deleteUtilityBill(hostelId, b.id, { suppressErrorToast: true }).subscribe({
       next: () => {
         this.deleting.set(false);
         this.reloadTotals();
       },
-      error: () => {
+      error: (err: ApiError) => {
         this.deletedIds.update((s) => { const n = new Set(s); n.delete(b.id); return n; });
         this.deleting.set(false);
+        this.reportDeleteFailure(err);
       },
     });
+  }
+
+  /**
+   * The one toast for a refused delete. A plan without CRM or a permission the user lacks gets
+   * its own translated sentence, worded for the owner or staff, instead of the server's English.
+   * Anything else reads exactly as `errorInterceptor`'s toast would have: the server's wording,
+   * pinned open for a 4xx, nothing for a 401 (the auth handler owns that) or while errors are muted.
+   */
+  private reportDeleteFailure(err: ApiError): void {
+    this.actionFailureToast(err);
   }
 
   protected cancelDelete(): void {

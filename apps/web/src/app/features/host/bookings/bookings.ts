@@ -67,6 +67,8 @@ import { NotificationService } from '@core/notification.service';
 import { SessionStore } from '@core/auth/session-store';
 import { errorStatus } from '@core/errors/api-error-text';
 import { isUnauthorized } from '@core/errors/is-unauthorized';
+import { isCrmRequired, isPermissionRefusal, pageNotAllowedKey } from '@core/host-access/host-access';
+import { PermissionRefused } from '@layout/components/permission-refused/permission-refused';
 import { ALL_ROOMS_LIMIT, HostOpsApi } from '@services';
 import { Translation, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CurrencySymbolPipe } from '@app/shared/currency/currency-symbol.pipe';
@@ -87,6 +89,8 @@ import {
 interface ViewState {
   loading: boolean;
   error: boolean;
+  /** The list was refused for a permission the signed-in user's role lacks. */
+  permissionError?: boolean;
   data: HostBookingPage | null;
 }
 
@@ -125,6 +129,7 @@ type MoveSurface = 'assign' | 'dialog' | 'panel' | 'toast';
     DashboardLayout,
     EmptyState,
     ErrorState,
+    PermissionRefused,
     ContextMenu,
     DataTable,
     GlobalFilter,
@@ -163,13 +168,13 @@ export class HostBookings {
   );
 
   private readonly hostOps = inject(HostOpsApi);
-  /** The hostel's rooms, for the "Guests in room" filter. */
+  /** The hostel's rooms, for the "Guests in room" filter; a failure leaves the filter without rooms, unannounced. */
   private readonly roomOptions = toSignal(
     toObservable(computed(() => this.hostelId())).pipe(
       switchMap((id) =>
         !id
           ? of([] as FilterOption[])
-          : this.hostOps.rooms(id, 1, ALL_ROOMS_LIMIT).pipe(
+          : this.hostOps.rooms(id, 1, ALL_ROOMS_LIMIT, {}, QUIET).pipe(
               // The number alone: `filterGroups` words it, in the host's language.
               map((r) => r.rooms.map((room) => ({ value: room.id, label: room.number }))),
               catchError(() => of([] as FilterOption[])),
@@ -217,10 +222,12 @@ export class HostBookings {
       switchMap(({ hostelId, page, filters }) =>
         !hostelId
           ? of(IDLE)
-          : this.bookingsApi.list(hostelId, page, PAGE_SIZE, filters).pipe(
+          : this.bookingsApi.list(hostelId, page, PAGE_SIZE, filters, QUIET).pipe(
               map((data): ViewState => ({ loading: false, error: false, data })),
               startWith(LOADING),
-              catchError(() => of<ViewState>({ loading: false, error: true, data: null })),
+              catchError((err: unknown) =>
+                of<ViewState>({ loading: false, error: true, permissionError: isPermissionRefusal(err), data: null }),
+              ),
             ),
       ),
     ),
@@ -362,16 +369,29 @@ export class HostBookings {
    */
   private reread(shown: HostBooking): void {
     const epoch = this.epoch;
+    const stillOpen = (id: string) => this.epoch === epoch && (this.viewing() ?? this.panelBehindDialog)?.id === id;
     this.bookingsApi.get(this.hostelId(), shown.id, { suppressErrorToast: true }).subscribe({
       next: (fresh) => {
-        const open = this.viewing() ?? this.panelBehindDialog;
-        if (this.epoch !== epoch || open?.id !== fresh.id) return;
+        if (!stillOpen(fresh.id)) return;
         if (this.panelBehindDialog?.id === fresh.id) this.panelBehindDialog = fresh;
         this.calendar()?.applyChange(shown, fresh);
         this.replaceBooking(fresh);
       },
-      error: () => undefined,
+      // A refusal to show the booking is worth saying: the panel's moves would be refused too.
+      error: (err: unknown) => {
+        const key = this.unseenKey(err);
+        if (key && stillOpen(shown.id)) this.viewError.set(key);
+      },
     });
+  }
+
+  /**
+   * The translation key for a booking the server would not show: the hostel's plan lacks CRM, or
+   * the signed-in user may not see it, worded for the owner or staff. `null` for any other failure.
+   */
+  private unseenKey(err: unknown): string | null {
+    if (isCrmRequired(err)) return 'hostBookings.planHasNoCrm';
+    return isPermissionRefusal(err) ? pageNotAllowedKey(this.failureOptions()) : null;
   }
 
   /**
@@ -400,15 +420,18 @@ export class HostBookings {
       return;
     }
     // Already the database's copy, so the panel does not read it again. A failure is reported
-    // below, so the global toast stays quiet: a request that never reached the server says so,
-    // anything else says the booking was not found.
+    // below, so the global toast stays quiet: a request that never reached the server says so, a
+    // booking the plan or the user's role may not see says that, anything else says not found.
     this.bookingsApi.get(this.hostelId(), id, { suppressErrorToast: true }).subscribe({
       next: (booking) => {
         if (this.urlBookingId === booking.id) this.showDetails(booking);
       },
       error: (err: unknown) => {
         if (this.urlBookingId !== id) return;
-        const key = errorStatus(err) === 0 ? 'common.cannotReachTheServer' : 'hostBookings.bookingNotFound';
+        const key =
+          errorStatus(err) === 0
+            ? 'common.cannotReachTheServer'
+            : (this.unseenKey(err) ?? 'hostBookings.bookingNotFound');
         this.notifications.error(this.i18n.translate<string>(key));
         this.leaveBookingUrl();
       },
@@ -1171,6 +1194,12 @@ const ACTION_ICON: Record<BookingAction, string> = {
 
 /** A lookup made for the open panel, which renders its failure inline. */
 const PANEL_LOOKUP: HostBookingRequestOptions = { suppressErrorToast: true };
+
+/**
+ * A load whose failure the page draws itself, or deliberately leaves unsaid, so a refused page
+ * shows one message rather than its own and the global toast's.
+ */
+const QUIET: HostBookingRequestOptions = { suppressErrorToast: true };
 
 /** The server invoices only a stay that happened: checked in or checked out. */
 function isInvoiceable(b: HostBooking): boolean {

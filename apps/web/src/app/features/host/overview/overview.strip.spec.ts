@@ -97,7 +97,7 @@ describe('HostOverview strip follows the hostel date', () => {
     await settle();
 
     expect(calendar).toHaveBeenCalledTimes(1);
-    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14');
+    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14', { suppressErrorToast: true });
     expect(page.strip().days[0].date).toBe('2026-04-01');
     expect(page.strip().days[0].isToday).toBe(true);
   });
@@ -108,7 +108,7 @@ describe('HostOverview strip follows the hostel date', () => {
     await settle();
 
     expect(calendar).toHaveBeenCalledTimes(1);
-    expect(calendar).toHaveBeenCalledWith('h1', '2026-03-31', '2026-04-13');
+    expect(calendar).toHaveBeenCalledWith('h1', '2026-03-31', '2026-04-13', { suppressErrorToast: true });
     expect(page.strip().days[0].date).toBe('2026-03-31');
     expect(page.strip().days[0].isToday).toBe(true);
   });
@@ -164,14 +164,14 @@ describe('HostOverview strip follows the hostel date', () => {
   it('re-asks for the new hostel and its own day when the selected hostel changes', async () => {
     const { selected, timeZoneOf, calendar, page, settle } = setUp({ zones: { h1: EAST, h2: WEST } });
     await settle();
-    expect(calendar).toHaveBeenLastCalledWith('h1', '2026-04-01', '2026-04-14');
+    expect(calendar).toHaveBeenLastCalledWith('h1', '2026-04-01', '2026-04-14', { suppressErrorToast: true });
 
     selected.set('h2');
     await settle();
 
     expect(timeZoneOf).toHaveBeenCalledWith('h2');
     expect(calendar).toHaveBeenCalledTimes(2);
-    expect(calendar).toHaveBeenLastCalledWith('h2', '2026-03-31', '2026-04-13');
+    expect(calendar).toHaveBeenLastCalledWith('h2', '2026-03-31', '2026-04-13', { suppressErrorToast: true });
     expect(page.strip().days[0].date).toBe('2026-03-31');
   });
 
@@ -183,7 +183,7 @@ describe('HostOverview strip follows the hostel date', () => {
 
     await settle();
 
-    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14');
+    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14', { suppressErrorToast: true });
     expect(page.upcomingError()).toBe(true);
     expect(page.upcomingLoading()).toBe(false);
   });
@@ -196,7 +196,7 @@ describe('HostOverview strip follows the hostel date', () => {
     selected.set('h2');
     await settle();
 
-    expect(calendar).toHaveBeenLastCalledWith('h2', '2026-03-31', '2026-04-13');
+    expect(calendar).toHaveBeenLastCalledWith('h2', '2026-03-31', '2026-04-13', { suppressErrorToast: true });
     expect(page.strip().days[0].date).toBe('2026-03-31');
   });
 
@@ -217,7 +217,7 @@ describe('HostOverview strip follows the hostel date', () => {
 
     await settle();
 
-    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14');
+    expect(calendar).toHaveBeenCalledWith('h1', '2026-04-01', '2026-04-14', { suppressErrorToast: true });
     expect(page.strip().days[0].date).toBe('2026-04-01');
   });
 

@@ -86,6 +86,53 @@ function isServerCode(code: unknown): boolean {
 }
 
 /**
+ * Whether a failure is the host API's 400 for a hostel with no live plan: "You need to
+ * subscribe…". Works on anything a request can reject with; `message` is never read.
+ */
+export function isPlanInactive(err: unknown): boolean {
+  if (errorStatus(err) !== 400) return false;
+  const { serverMessages } = err as { serverMessages?: unknown };
+  return (
+    Array.isArray(serverMessages) &&
+    serverMessages.some((m) => typeof m === 'string' && INACTIVE_MESSAGE.test(m))
+  );
+}
+
+/** Who a refusal's message is worded for. */
+export interface RefusalAudience {
+  /**
+   * The signed-in user holds the owner's `host` role, so a permission their account lacks is for
+   * HostelHive support to grant. Otherwise staff, who are told to ask the owner. Staff by default.
+   */
+  owner?: boolean;
+}
+
+/**
+ * The translation key for a host action (a save, a delete, a stay move) the server refused for
+ * the hostel's plan lacking CRM ({@link isCrmRequired}) or for a permission the signed-in user's
+ * role lacks ({@link isPermissionRefusal}), worded for the owner or staff. `null` for any other
+ * failure, so the caller keeps its own reading.
+ */
+export function actionRefusalKey(err: unknown, opts: RefusalAudience = {}): string | null {
+  if (isCrmRequired(err)) return 'hostBookings.planHasNoCrm';
+  if (!isPermissionRefusal(err)) return null;
+  return opts.owner ? 'hostBookings.notAllowedOwner' : 'hostBookings.notAllowed';
+}
+
+/**
+ * The translation key for something the signed-in user may not see — a page, or one record on
+ * it — worded for the owner or staff. The sentence `<hh-permission-refused>` shows.
+ */
+export function pageNotAllowedKey(opts: RefusalAudience = {}): string {
+  return opts.owner ? 'hostAccess.pageNotAllowedOwner' : 'hostAccess.pageNotAllowed';
+}
+
+/** The translation key for a hostel with no live plan ({@link isPlanInactive}), worded for the owner or staff. */
+export function planInactiveKey(opts: RefusalAudience = {}): string {
+  return opts.owner ? 'hostAccess.offline' : 'hostAccess.offlineStaff';
+}
+
+/**
  * Recognises the host API's plan refusals for one hostel: a 400 "You need to subscribe…" when the
  * hostel has no live plan, and a 403 `crm_required` when its plan lacks CRM ({@link isCrmRequired}).
  * Returns null for any other failure or any other URL, including the hostel index. The hostel id is
@@ -97,8 +144,7 @@ export function classifyHostAccess(
 ): HostAccessRefusal | null {
   const hostelId = hostAccessTarget(url)?.hostelId;
   if (!hostelId) return null;
-  const messages = err.serverMessages ?? [];
-  if (err.status === 400 && messages.some((m) => INACTIVE_MESSAGE.test(m))) {
+  if (isPlanInactive(err)) {
     return { hostelId, kind: 'inactive' };
   }
   if (isCrmRequired(err)) {

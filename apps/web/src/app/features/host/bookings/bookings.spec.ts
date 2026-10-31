@@ -1,9 +1,12 @@
-import { WritableSignal } from '@angular/core';
+import { Provider, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
-import { Observable, Subject, defer, of, throwError } from 'rxjs';
+import { NEVER, Observable, Subject, defer, of, throwError } from 'rxjs';
 import { Invoice } from '@hostelhive/data-access';
+import { REFUSAL_KINDS, RefusalKind, refusalError } from '@app/testing/backend-refusals';
+import { LIST_LOAD_REFUSALS, kindsShowing, loadSurface } from '@app/testing/load-refusal-surface';
+import { HostPropertyStore } from '@services/host-property-store';
 import { HostPage, HostPageDeps, hostPageDeps, openHostPage } from '@app/testing/host-page';
 import {
   HOSTEL_ID,
@@ -3920,5 +3923,240 @@ describe('HostBookings', () => {
         expect(shownText(page, deps)).toContain(m.key);
       });
     });
+  });
+});
+
+const ROLE_BODY = {
+  host: 'hostAccess.pageNotAllowedOwner',
+  manager: 'hostAccess.pageNotAllowed',
+} as const;
+
+type PageRole = keyof typeof ROLE_BODY;
+
+const ROLES: readonly PageRole[] = ['host', 'manager'];
+
+/** Signed in before the page opens, because the host store keeps its hostel list per user. */
+function signedIn(role: PageRole): Provider {
+  return {
+    provide: SessionStore,
+    useFactory: () => {
+      const session = new SessionStore();
+      session.setSession(sessionUser(role), 'tok');
+      return session;
+    },
+  };
+}
+
+/** The bookings list tab after the list read was answered with `kind`, as the real interceptor shapes it. */
+async function openListRefused(kind: RefusalKind, role: PageRole = 'host'): Promise<Page> {
+  const deps = hostPageDeps();
+  deps.bookings.list.mockReturnValue(throwError(() => refusalError(kind)));
+  const page = await openHostPage(LIST_URL, HostBookings, { bookings: HostBookings }, {
+    deps,
+    providers: [provideKeysWithParams(), signedIn(role)],
+  });
+  await settle(page);
+  await showList(page);
+  return page;
+}
+
+describe('HostBookings when the list load is refused', () => {
+  afterEach(() => {
+    TestBed.inject(HostPropertyStore).clear();
+    TestBed.inject(SessionStore).clear();
+  });
+
+  describe('for a missing permission', () => {
+    const cases = kindsShowing('permission').flatMap((kind) => ROLES.map((role) => [kind, role] as const));
+
+    it.each(cases)('a %s refusal for the %s shows the permission panel and nothing else', async (kind, role) => {
+      const page = await openListRefused(kind, role);
+
+      const reading = loadSurface(page.el);
+      expect(reading.surfaces).toEqual(['permission']);
+      expect(reading.heading).toBe('coreForbidden.accessBlocked');
+      expect(reading.body).toBe(ROLE_BODY[role]);
+      expect(reading.retry).toBe(false);
+      expect(page.el.querySelector('hh-data-table')).toBeNull();
+      expect(reading.text).not.toMatch(/not authorized|subscribe/i);
+    });
+  });
+
+  describe('for any other failure', () => {
+    const others = REFUSAL_KINDS.filter((kind) => LIST_LOAD_REFUSALS[kind] !== 'permission');
+
+    it.each(others)('a %s failure keeps the generic error and shows no panel', async (kind) => {
+      const page = await openListRefused(kind);
+
+      const reading = loadSurface(page.el);
+      expect(reading.surfaces).toEqual(['error']);
+      expect(reading.text).toContain('common.weCouldnTLoad2');
+      expect(page.el.querySelector('hh-permission-refused')).toBeNull();
+    });
+  });
+
+  describe('which reads opt out of the global error toast', () => {
+    it('asks for the list quietly', async () => {
+      const deps = hostPageDeps();
+      await open({ deps, items: [checkedIn()] });
+
+      expect(deps.bookings.list.mock.calls[0].at(-1)).toEqual(QUIET);
+    });
+
+    it('asks for the room filter options quietly', async () => {
+      const deps = hostPageDeps();
+      await open({ deps, items: [checkedIn()] });
+
+      expect(deps.ops.rooms).toHaveBeenCalledTimes(1);
+      expect(deps.ops.rooms.mock.calls[0].at(-1)).toEqual(QUIET);
+    });
+  });
+});
+
+describe('HostBookings when a booking cannot be shown', () => {
+  afterEach(() => TestBed.inject(SessionStore).clear());
+
+  /** Signs in on the session the page shares; after `open`, which is what configures the test module. */
+  function signIn(role: PageRole): void {
+    TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+  }
+
+  const PERMISSION_KINDS = kindsShowing('permission');
+  const permissionCases = PERMISSION_KINDS.flatMap((kind) => ROLES.map((role) => [kind, role] as const));
+  const CRM_KINDS: readonly RefusalKind[] = ['crmRequired', 'crmMessageOnly'];
+
+  describe('opened from its URL while off the loaded page', () => {
+    async function openOffPage(kind: RefusalKind, role: PageRole): Promise<{ page: Page; deps: HostPageDeps }> {
+      const deps = hostPageDeps();
+      deps.bookings.get.mockReturnValue(throwError(() => refusalError(kind)));
+      const page = await open({ deps, items: [checkedIn()] });
+      signIn(role);
+      await page.navigate(bookingPath(HOSTEL_ID, 'zz-9'));
+      await settle(page);
+      return { page, deps };
+    }
+
+    it.each(permissionCases)('a %s refusal for the %s says they may not see it, once, and returns to the list', async (kind, role) => {
+      const { page, deps } = await openOffPage(kind, role);
+
+      expect(deps.bookings.get).toHaveBeenCalledWith(HOSTEL_ID, 'zz-9', QUIET);
+      expect(deps.notifications.error).toHaveBeenCalledTimes(1);
+      expect(deps.notifications.error).toHaveBeenCalledWith(ROLE_BODY[role]);
+      expect(api(page).viewing()).toBeNull();
+      expect(page.url()).toBe(LIST_URL);
+      expectNoLeak(page, deps, 'not authorized');
+    });
+
+    it.each(CRM_KINDS)('a %s refusal says the plan has no CRM, once, and returns to the list', async (kind) => {
+      const { page, deps } = await openOffPage(kind, 'host');
+
+      expect(deps.notifications.error).toHaveBeenCalledTimes(1);
+      expect(deps.notifications.error).toHaveBeenCalledWith('hostBookings.planHasNoCrm');
+      expect(page.url()).toBe(LIST_URL);
+    });
+
+    it.each(['rateLimited', 'serverError'] as const)('a %s failure still says the booking was not found', async (kind) => {
+      const { page, deps } = await openOffPage(kind, 'host');
+
+      expect(deps.notifications.error).toHaveBeenCalledTimes(1);
+      expect(deps.notifications.error).toHaveBeenCalledWith('hostBookings.bookingNotFound');
+      expect(page.url()).toBe(LIST_URL);
+    });
+  });
+
+  describe('read again after its panel opened', () => {
+    const stale = () => hostBooking('confirmed', { id: 'bk-s' });
+
+    async function openRefusedPanel(kind: RefusalKind, role: PageRole): Promise<{ page: Page; deps: HostPageDeps }> {
+      const deps = hostPageDeps();
+      deps.bookings.get.mockReturnValue(throwError(() => refusalError(kind)));
+      const page = await open({ deps, items: [stale()] });
+      signIn(role);
+      await openPanel(page, api(page).rows()[0]);
+      return { page, deps };
+    }
+
+    it.each(permissionCases)('a %s refusal for the %s is told in the panel, with no toast', async (kind, role) => {
+      const { page, deps } = await openRefusedPanel(kind, role);
+
+      expect(api(page).viewError()).toBe(ROLE_BODY[role]);
+      expect(panelFooterAlert(page)).toBe(ROLE_BODY[role]);
+      expect(api(page).viewing()?.id).toBe('bk-s');
+      expect(deps.notifications.raised).toEqual([]);
+      expectNoLeak(page, deps, 'not authorized');
+    });
+
+    it.each(CRM_KINDS)('a %s refusal is told in the panel as the plan lacking CRM, with no toast', async (kind) => {
+      const { page, deps } = await openRefusedPanel(kind, 'host');
+
+      expect(api(page).viewError()).toBe('hostBookings.planHasNoCrm');
+      expect(deps.notifications.raised).toEqual([]);
+    });
+
+    it.each(['rateLimited', 'serverError', 'network'] as const)('a %s failure says nothing', async (kind) => {
+      const { page, deps } = await openRefusedPanel(kind, 'host');
+
+      expect(api(page).viewError()).toBe('');
+      expect(deps.notifications.raised).toEqual([]);
+    });
+
+    it('says nothing when the refusal arrives after the panel moved to another booking', async () => {
+      const deps = hostPageDeps();
+      const forA = new Subject<HostBooking>();
+      deps.bookings.get.mockReturnValueOnce(forA).mockReturnValueOnce(NEVER);
+      const page = await open({ deps, items: [hostBooking('confirmed', { id: 'bk-a' }), hostBooking('confirmed', { id: 'bk-b' })] });
+
+      api(page).openDetails(api(page).rows()[0]);
+      await settle(page);
+      api(page).openDetails(api(page).rows()[1]);
+      await settle(page);
+      forA.error(refusalError('permissionCanCan'));
+      await settle(page);
+
+      expect(api(page).viewing()?.id).toBe('bk-b');
+      expect(api(page).viewError()).toBe('');
+      expect(deps.notifications.raised).toEqual([]);
+    });
+
+    it('says nothing when the refusal arrives after the panel closed', async () => {
+      const deps = hostPageDeps();
+      const late = new Subject<HostBooking>();
+      deps.bookings.get.mockReturnValue(late);
+      const page = await open({ deps, items: [stale()] });
+
+      api(page).openDetails(api(page).rows()[0]);
+      await settle(page);
+      api(page).closeDetails();
+      await settle(page);
+      late.error(refusalError('permissionCanCan'));
+      await settle(page);
+
+      expect(api(page).viewError()).toBe('');
+      expect(deps.notifications.raised).toEqual([]);
+    });
+  });
+});
+
+describe('HostBookings when the hostel has no live plan for a stay move', () => {
+  afterEach(() => TestBed.inject(SessionStore).clear());
+
+  it.each([
+    { who: 'a manager', role: 'manager', key: 'hostAccess.offlineStaff' },
+    { who: 'an owner', role: 'host', key: 'hostAccess.offline' },
+  ] as const)('writes the refusal into the open dialog for $who', async ({ role, key }) => {
+    const deps = hostPageDeps();
+    refuseMove(deps, 'checkOut', refusalError('inactive'));
+    const page = await open({ deps, items: [checkedIn()] });
+    TestBed.inject(SessionStore).setSession(sessionUser(role), 'tok');
+
+    await startMove(page, 'checkOut');
+    await confirmViaButton(page);
+
+    expect(modal(page)).not.toBeNull();
+    expect(dialogAlert(page)).toBe(key);
+    expect(api(page).dialogError()).toBe(key);
+    expect(deps.notifications.raised).toEqual([]);
+    expect(api(page).busy()).toBe(false);
+    expectNoLeak(page, deps, 'subscribe');
   });
 });

@@ -42,10 +42,10 @@ export class ApiClientRecorder {
     return this.record('put', args, undefined, args[1], args[2]);
   }
   patch<T>(...args: Parameters<ApiClient['patch']>): Observable<T> {
-    return this.record('patch', args, undefined, args[1], undefined);
+    return this.record('patch', args, undefined, args[1], args[2]);
   }
   delete<T>(...args: Parameters<ApiClient['delete']>): Observable<T> {
-    return this.record('delete', args, undefined, args[1], undefined);
+    return this.record('delete', args, undefined, args[1], args[2]);
   }
 
   /** Answers every call with `body`. */

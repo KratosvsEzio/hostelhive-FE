@@ -76,7 +76,7 @@ describe('Overview Retry', () => {
       await pressRetry();
 
       expect(cards).toHaveBeenCalledTimes(2);
-      expect(cards).toHaveBeenLastCalledWith(HOSTEL_ID);
+      expect(cards).toHaveBeenLastCalledWith(HOSTEL_ID, { suppressErrorToast: true });
       expect(loadSurface(el).surfaces).toEqual([]);
       expect(el.textContent).toContain('Collected');
     },
